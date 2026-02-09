@@ -1,0 +1,9 @@
+# Placeholder for PWA Icons
+
+Add the following icon files:
+- icon-192.png (192x192)
+- icon-512.png (512x512)
+- favicon.ico
+
+You can generate these at: https://www.favicon-generator.org/
+Or use a simple logo/brand image for now.
