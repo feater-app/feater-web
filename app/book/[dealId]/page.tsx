@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getMockDeal } from "@/lib/mock-data";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
+import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import BookingForm from "@/components/BookingForm";
 
@@ -12,10 +14,10 @@ interface BookingPageProps {
 }
 
 const errorMessages: Record<string, string> = {
-  no_spots: "Não há vagas disponíveis para esta oferta no momento.",
-  invalid_party_size: "A quantidade de pessoas selecionada não é válida para esta oferta.",
-  deal_not_found: "Esta oferta não está mais disponível.",
-  failed: "Não foi possível concluir sua reserva. Tente novamente.",
+  no_spots: "Nao ha vagas disponiveis para esta oferta no momento.",
+  invalid_party_size: "A quantidade de pessoas selecionada nao e valida para esta oferta.",
+  deal_not_found: "Esta oferta nao esta mais disponivel.",
+  failed: "Nao foi possivel concluir sua reserva. Tente novamente.",
 };
 
 export default async function BookingPage({ params, searchParams }: BookingPageProps) {
@@ -30,9 +32,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("deals")
-      .select(
-        `*, restaurant:restaurants (id, name, category, image_url)`
-      )
+      .select("*, restaurant:restaurants (id, name, category, image_url)")
       .eq("id", dealId)
       .single();
     if (!error) deal = data;
@@ -41,51 +41,44 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
   if (!deal) notFound();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <a href={`/deal/${deal.id}`} className="text-gray-600 hover:text-gray-900 transition">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </a>
-          <h1 className="text-xl font-bold">Concluir reserva</h1>
+    <div className="app-shell">
+      <header className="top-nav">
+        <div className="nav-inner">
+          <Link href={`/deal/${deal.id}`} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary">
+            <span aria-hidden>←</span>
+            Oferta
+          </Link>
+          <Image src="/logo-feater.png" alt="Feater" width={118} height={32} className="brand-logo" priority />
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 py-6">
-        {/* Deal Summary Card */}
-        <div className="card p-4 mb-6">
+      <main className="mx-auto max-w-2xl space-y-4 px-4 py-5 md:space-y-5 md:py-7">
+        <section className="deal-card p-4">
           <div className="flex gap-4">
-            <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
-              {deal.restaurant.image_url && (
-                <img
-                  src={deal.restaurant.image_url}
-                  alt={deal.restaurant.name}
-                  className="w-full h-full object-cover"
-                />
+            <div className="relative h-20 w-20 overflow-hidden rounded-2xl">
+              {deal.restaurant.image_url ? (
+                <Image src={deal.restaurant.image_url} alt={deal.restaurant.name} fill className="object-cover" unoptimized />
+              ) : (
+                <div className="h-full w-full bg-slate-100" />
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="font-bold text-lg line-clamp-1">{deal.title}</h2>
-              <p className="text-sm text-gray-600">{deal.restaurant.name}</p>
-              {deal.discount_percentage && (
-                <span className="badge-discount text-xs mt-1 inline-block">
-                  {deal.discount_percentage}% OFF
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
 
-        {/* Booking Form */}
-        {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessages[error] ?? errorMessages.failed}
+            <div className="min-w-0 flex-1">
+              <p className="line-clamp-1 text-lg font-semibold text-slate-900">{deal.title}</p>
+              <p className="text-sm text-slate-500">{deal.restaurant.name}</p>
+              <div className="mt-2 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                {deal.discount_percentage}% OFF
+              </div>
+            </div>
           </div>
+        </section>
+
+        {error && (
+          <section className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {errorMessages[error] ?? errorMessages.failed}
+          </section>
         )}
+
         <BookingForm deal={deal} isMockMode={isMockMode} />
       </main>
     </div>

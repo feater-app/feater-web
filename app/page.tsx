@@ -10,6 +10,8 @@ export const revalidate = 60;
 
 const isMockMode = !hasSupabaseEnv;
 
+const quickFilters = ["Hoje", "50%+", "Perto de voce", "Jantar", "Brunch"];
+
 export default async function HomePage() {
   let deals: any[] = [];
 
@@ -36,129 +38,97 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-primary">Feater</h1>
-          <p className="text-sm text-gray-600">
-            Descubra ofertas incríveis em restaurantes
-          </p>
+    <div className="app-shell">
+      <header className="top-nav">
+        <div className="nav-inner">
+          <Image src="/logo-feater.png" alt="Feater" width={126} height={34} className="brand-logo" priority />
+          <span className="rounded-full border border-primary/15 bg-white px-3 py-1 text-[11px] font-semibold text-primary">
+            Sao Paulo
+          </span>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Stats Bar */}
-        <div className="bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl p-6 mb-6">
-          <h2 className="text-3xl font-bold mb-2">
-            {deals?.length || 0} ofertas disponíveis
-          </h2>
-          <p className="text-white/90">
-            Economize enquanto apoia restaurantes locais
+      <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-5 md:gap-6 md:py-7">
+        <section className="hero-surface">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">Feater curadoria</p>
+          <h1 className="mt-2 max-w-[22ch] text-2xl font-semibold leading-tight md:text-4xl">
+            Ofertas com cara de tendencia para sua proxima reserva
+          </h1>
+          <p className="mt-3 max-w-[38ch] text-sm text-white/90 md:text-base">
+            Descontos exclusivos, restaurantes em alta e reservas instantaneas em poucos toques.
           </p>
-        </div>
 
-        {/* Deals Grid */}
-        {deals && deals.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="mt-5 grid grid-cols-3 gap-2 md:max-w-xl md:gap-3">
+            <div className="metric-pill">
+              <p className="text-lg font-bold text-white">{deals.length}</p>
+              <p>ofertas</p>
+            </div>
+            <div className="metric-pill">
+              <p className="text-lg font-bold text-white">24h</p>
+              <p>resposta media</p>
+            </div>
+            <div className="metric-pill">
+              <p className="text-lg font-bold text-white">100%</p>
+              <p>mobile first</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="chip-row" aria-label="Filtros rapidos">
+          {quickFilters.map((filter) => (
+            <button key={filter} type="button" className="chip">
+              {filter}
+            </button>
+          ))}
+        </section>
+
+        {deals.length > 0 ? (
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {deals.map((deal: any) => (
-              <Link
-                key={deal.id}
-                href={`/deal/${deal.id}`}
-                className="card overflow-hidden group"
-              >
-                {/* Deal Image */}
-                <div className="relative h-48 bg-gray-200">
+              <Link key={deal.id} href={`/deal/${deal.id}`} className="deal-card group">
+                <div className="deal-image-wrap">
                   <Image
                     src={deal.image_url || deal.restaurant.image_url || "/placeholder.jpg"}
                     alt={deal.title}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                     unoptimized
                   />
+                  <div className="deal-image-overlay" />
+
                   {deal.discount_percentage && (
-                    <div className="absolute top-3 right-3 badge-discount font-bold text-lg">
-                      {deal.discount_percentage}% OFF
-                    </div>
+                    <div className="absolute left-3 top-3 badge-discount">{deal.discount_percentage}% OFF</div>
                   )}
-                </div>
 
-                {/* Deal Info */}
-                <div className="p-4">
-                  {/* Restaurant Name */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
                       {deal.restaurant.category}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-lg mb-1 line-clamp-1">
-                    {deal.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                    {deal.description || "Oferta por tempo limitado"}
-                  </p>
-
-                  {/* Restaurant */}
-                  <div className="flex items-center gap-2 text-sm text-gray-700 mb-3">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    <span className="font-medium">{deal.restaurant.name}</span>
-                  </div>
-
-                  {/* Availability */}
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>
-                      {deal.available_spots} vagas restantes
-                    </span>
-                    <span>
-                      Até {format(new Date(deal.valid_until), "dd MMM", { locale: ptBR })}
-                    </span>
+                    </p>
+                    <h2 className="mt-1 line-clamp-1 text-lg font-semibold">{deal.title}</h2>
+                    <p className="line-clamp-1 text-sm text-white/85">{deal.restaurant.name}</p>
                   </div>
                 </div>
 
-                {/* CTA */}
-                <div className="px-4 pb-4">
-                  <div className="btn-primary w-full text-center">
-                    Reservar agora
+                <div className="space-y-4 p-4">
+                  <p className="line-clamp-2 text-sm text-slate-600">{deal.description || "Oferta por tempo limitado"}</p>
+
+                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                    <span>{deal.available_spots} vagas restantes</span>
+                    <span>Ate {format(new Date(deal.valid_until), "dd MMM", { locale: ptBR })}</span>
                   </div>
+
+                  <span className="btn-primary w-full">Reservar agora</span>
                 </div>
               </Link>
             ))}
-          </div>
+          </section>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              Nenhuma oferta disponível no momento
-            </p>
-            <p className="text-gray-400 text-sm mt-2">Volte em breve!</p>
-          </div>
+          <section className="card px-6 py-12 text-center">
+            <p className="text-base font-semibold text-slate-700">Nenhuma oferta disponivel no momento</p>
+            <p className="mt-2 text-sm text-slate-500">Volte em breve para novas oportunidades.</p>
+          </section>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-gray-500">
-          <p>&copy; 2026 Feater. Todos os direitos reservados.</p>
-        </div>
-      </footer>
     </div>
   );
 }
