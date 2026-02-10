@@ -1,237 +1,132 @@
-# Feater Web - Restaurant Deals Platform
+# Feater Web
 
-A modern, mobile-first web application for discovering and booking restaurant deals. Built with Next.js 15, Supabase, and Tailwind CSS.
+Feater Web is a mobile-first marketplace for **permutas** between restaurants and creators.
 
-## Features
+The flow is simple: restaurants publish a collaboration brief (reward + deliverables), creators apply, and both sides align execution.
 
-- 🎯 **List View**: Browse all available restaurant deals
-- 📱 **Mobile-First**: Optimized for mobile devices with PWA support
-- 🔍 **Deal Details**: View comprehensive information about each deal
-- 📅 **Booking System**: Complete booking flow with form validation
-- ⚡ **Real-time Updates**: Live availability updates
-- 🎨 **Modern UI**: Clean, responsive design with Tailwind CSS
-- 🚀 **Fast Performance**: Server-side rendering with Next.js 15
+This repository is built to be practical in production and clear to read in public.
 
-## Tech Stack
+## Product Snapshot
 
-- **Framework**: Next.js 15 (App Router)
-- **Database**: Supabase (PostgreSQL)
-- **Styling**: Tailwind CSS
-- **Language**: TypeScript
-- **Deployment**: Vercel (recommended)
-- **PWA**: next-pwa
+- Creator-facing feed of active permutas
+- Requirement-first cards (minimum followers + IG/TikTok deliverables)
+- Detail page with reward, schedule, and restaurant profile
+- Candidatura flow with server actions
+- Confirmation page and next-step messaging
+- Works in:
+  - `Mock mode` (no Supabase required)
+  - `Supabase mode` (real data + atomic spot handling)
+
+## Stack
+
+- `Next.js 15` (App Router, Server Components)
+- `TypeScript` (strict)
+- `Tailwind CSS`
+- `Supabase` (Postgres, RLS, RPC)
+- `Bun` (runtime/package manager)
+- `next-pwa` (installable web app)
+
+## Engineering Notes
+
+- Centralized Supabase env validation in `lib/supabase/env.ts`
+- Atomic write path via `create_booking_with_spot` RPC (insert + spot decrement)
+- Explicit schema and migration SQL under `supabase/`
+- PT-BR-first UI copy
+- Brand/theme aligned with the RN app
 
 ## Quick Start
 
-### 1. Clone and Install
+1. Install dependencies
 
 ```bash
-cd feater-web
 bun install
 ```
 
-### 2. Set Up Supabase
-
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Once created, go to **Settings** → **API**
-3. Copy your project URL and anon key
-
-### 3. Run Database Schema
-
-1. In Supabase dashboard, go to **SQL Editor**
-2. Open the file `supabase/schema.sql` from this project
-3. Copy and paste the entire content into the SQL Editor
-4. Click **Run**
-
-This will create:
-- `restaurants` table
-- `deals` table
-- `bookings` table
-- `create_booking_with_spot` function (atomic booking + availability decrement)
-- Row Level Security policies
-- Sample data (4 restaurants + 5 deals)
-
-### 4. Configure Environment Variables
-
-Create a `.env.local` file in the root directory:
+2. Run in mock mode immediately
 
 ```bash
-cp .env.local.example .env.local
+bun dev
 ```
 
-Edit `.env.local` and add your Supabase credentials:
+Open `http://localhost:3000`.
+
+## Supabase Setup (Real Data)
+
+1. Create a Supabase project
+2. Copy `.env.local.example` to `.env.local`
+3. Fill:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 5. Run Development Server
+4. Execute SQL:
+
+- Fresh database: run `supabase/schema.sql`
+- Existing database: run in this order
+  1. `supabase/migrate-permuta.sql`
+  2. `supabase/backfill-permuta.sql`
+
+5. Start app:
 
 ```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+## Useful Commands
+
+```bash
+bun dev
+bun run build
+bun x tsc --noEmit
+```
+
+## Deploy (Vercel)
+
+1. Push to GitHub
+2. Import repo in Vercel
+3. Set env vars:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Build command: `bun run build` (usually auto-detected)
+
+If the repo is public, Vercel Hobby works well for low-cost demos/portfolio hosting.
 
 ## Project Structure
 
-```
-feater-web/
-├── app/
-│   ├── layout.tsx              # Root layout
-│   ├── page.tsx                # Home page (deal list)
-│   ├── deal/[id]/page.tsx      # Deal details
-│   ├── book/[dealId]/page.tsx  # Booking page
-│   └── booking-success/page.tsx # Success page
-├── components/
-│   └── BookingForm.tsx         # Client-side booking form
-├── lib/
-│   └── supabase/
-│       ├── client.ts           # Client-side Supabase
-│       ├── server.ts           # Server-side Supabase
-│       └── types.ts            # Database types
-├── public/
-│   └── manifest.json           # PWA manifest
-└── supabase/
-    └── schema.sql              # Database schema
-```
+```text
+app/
+  page.tsx                    # Feed de permutas
+  deal/[id]/page.tsx          # Detalhes da permuta
+  book/[dealId]/page.tsx      # Candidatura
+  booking-success/page.tsx    # Confirmação
+  actions/booking.ts          # Server Action + RPC flow
 
-## Features Overview
+components/
+  BookingForm.tsx
 
-### Home Page (`/`)
-- Lists all active deals
-- Shows restaurant info, discount percentage, availability
-- Server-side rendered for SEO
-- Revalidates every 60 seconds
+lib/
+  mock-data.ts
+  supabase/
+    env.ts
+    client.ts
+    server.ts
+    types.ts
 
-### Deal Details (`/deal/[id]`)
-- Detailed deal information
-- Restaurant details
-- Available days and validity period
-- Fixed bottom CTA button
-
-### Booking Page (`/book/[dealId]`)
-- Form with user information
-- Date picker (within deal validity)
-- Number of people selector
-- Special requests field
-- Real-time availability check
-
-### Success Page (`/booking-success`)
-- Confirmation message
-- Booking details summary
-- Next steps information
-
-## Database Schema
-
-### Restaurants
-- Basic info (name, description, category)
-- Images and Instagram handle
-- Address
-
-### Deals
-- Connected to restaurants
-- Discount percentage
-- Availability (spots, dates, days)
-- Max people per booking
-
-### Bookings
-- User information
-- Connected to deals
-- Status (pending/confirmed/cancelled)
-- Booking date and notes
-
-## Deployment
-
-### Deploy to Vercel
-
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Import your repository
-4. Add environment variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-5. Deploy!
-
-Your app will be live in ~2 minutes with automatic HTTPS and global CDN.
-
-### PWA Installation
-
-Once deployed:
-- **iOS**: Open in Safari → Share → Add to Home Screen
-- **Android**: Chrome will prompt to install, or use menu → Install app
-
-## Customization
-
-### Colors
-
-Edit `tailwind.config.ts`:
-
-```typescript
-colors: {
-  primary: {
-    DEFAULT: "#FF6B35",  // Your brand color
-    light: "#FF8C61",
-    dark: "#E55A2B",
-  },
-}
+supabase/
+  schema.sql
+  migrate-permuta.sql
+  backfill-permuta.sql
 ```
 
-### Images
+## Roadmap (Short)
 
-Replace placeholder images in the database with real images:
-- Use Supabase Storage for uploads
-- Or use external URLs (Unsplash, Cloudinary, etc.)
-
-## Performance
-
-- **Server-side rendering** for instant page loads
-- **Image optimization** with Next.js Image component
-- **Automatic code splitting** for faster navigation
-- **60s revalidation** for fresh data without constant queries
-
-## Security
-
-- Row Level Security (RLS) enabled on all tables
-- Server-side data fetching prevents API key exposure
-- Form validation on both client and server
-- Protected routes with Supabase auth (ready to add)
-
-## Next Steps
-
-1. **Add Authentication**: Implement sign-up/sign-in with Supabase Auth
-2. **User Dashboard**: Let users view their booking history
-3. **Restaurant Dashboard**: Let restaurants manage their deals
-4. **Push Notifications**: Notify users about booking confirmations
-5. **Search & Filters**: Add search by category, location, date
-6. **Reviews**: Let users review restaurants after visits
-7. **Payment Integration**: Add Stripe for prepayment/deposits
-
-## Troubleshooting
-
-**Issue**: "Module not found" errors
-- Run `bun install` again
-- Delete `node_modules` and `.next`, then reinstall
-
-**Issue**: Supabase connection fails
-- Check your `.env.local` file
-- Ensure variables start with `NEXT_PUBLIC_`
-- Restart dev server after changing env vars
-
-**Issue**: Database queries fail
-- Verify you ran the schema.sql in Supabase
-- Check RLS policies are enabled
-- Check table names match exactly
+- Real filters (nicho, plataforma, seguidores)
+- Auth (Email + Instagram OAuth)
+- Dashboard de creators (status das candidaturas)
+- Dashboard de restaurantes (aprovar/rejeitar)
 
 ## License
 
 MIT
-
-## Support
-
-For issues or questions, please open an issue on GitHub or contact the development team.
-
----
-
-Built with ❤️ using Next.js 15 and Supabase

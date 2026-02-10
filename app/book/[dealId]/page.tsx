@@ -54,7 +54,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
             <span aria-hidden>←</span>
             Oferta
           </Link>
-          <Image src="/logo-feater.png" alt="Feater" width={118} height={32} className="brand-logo" priority />
+          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
         </div>
       </header>
 

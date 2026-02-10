@@ -66,7 +66,7 @@ export default async function HomePage() {
     <div className="app-shell">
       <header className="top-nav">
         <div className="nav-inner">
-          <Image src="/logo-feater.png" alt="Feater" width={126} height={34} className="brand-logo" priority />
+          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
           <span className="rounded-full border border-primary/15 bg-white px-3 py-1 text-[11px] font-semibold text-primary">
             Sao Paulo
           </span>

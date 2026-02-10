@@ -57,7 +57,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
     <div className="app-shell">
       <header className="top-nav">
         <div className="nav-inner justify-center">
-          <Image src="/logo-feater.png" alt="Feater" width={124} height={34} className="brand-logo" priority />
+          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
         </div>
       </header>
 
