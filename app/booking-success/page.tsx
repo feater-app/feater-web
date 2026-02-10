@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getMockDeal } from "@/lib/mock-data";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import Image from "next/image";
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 
 interface SuccessPageProps {
   searchParams: Promise<{
@@ -57,7 +57,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
     <div className="app-shell">
       <header className="top-nav">
         <div className="nav-inner justify-center">
-          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
+          <BrandLogo priority />
         </div>
       </header>
 

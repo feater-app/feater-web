@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BookingForm from "@/components/BookingForm";
+import BrandLogo from "@/components/BrandLogo";
 
 const isMockMode = !hasSupabaseEnv;
 
@@ -54,7 +55,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
             <span aria-hidden>←</span>
             Oferta
           </Link>
-          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
+          <BrandLogo priority />
         </div>
       </header>
 
