@@ -16,81 +16,65 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
   }, null);
 
   return (
-    <form action={action} className="card p-6 space-y-4">
+    <form action={action} className="card space-y-5 p-5 md:p-6">
       {isMockMode && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-          Modo demonstração — as reservas não serão salvas permanentemente. Conecte o Supabase para persistir os dados.
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Modo demonstracao: as reservas nao sao salvas permanentemente sem Supabase conectado.
         </div>
       )}
 
       <input type="hidden" name="dealId" value={deal.id} />
 
-      <h3 className="font-bold text-lg">Seus dados</h3>
-
-      {/* Name */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+        <p className="text-xl font-semibold text-slate-900">Concluir reserva</p>
+        <p className="mt-1 text-sm text-slate-500">Preencha seus dados e finalize em poucos toques.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <label htmlFor="name" className="block text-sm font-semibold text-slate-700">
           Nome completo *
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            className="input mt-2"
+            placeholder="Joao da Silva"
+          />
         </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          required
-          className="input"
-          placeholder="João da Silva"
-        />
-      </div>
 
-      {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
           E-mail *
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            className="input mt-2"
+            placeholder="joao@email.com"
+          />
         </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          required
-          className="input"
-          placeholder="john@example.com"
-        />
-      </div>
 
-      {/* Phone */}
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="phone" className="block text-sm font-semibold text-slate-700">
           Telefone
+          <input type="tel" id="phone" name="phone" className="input mt-2" placeholder="+55 11 99999-9999" />
         </label>
-        <input
-          type="tel"
-          id="phone"
-          name="phone"
-          className="input"
-          placeholder="+55 11 99999-9999"
-        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Number of People */}
-        <div>
-          <label htmlFor="numPeople" className="block text-sm font-medium text-gray-700 mb-1">
-            Pessoas *
-          </label>
-          <select id="numPeople" name="numPeople" required className="input">
+        <label htmlFor="numPeople" className="block text-sm font-semibold text-slate-700">
+          Pessoas *
+          <select id="numPeople" name="numPeople" required className="input mt-2">
             {Array.from({ length: deal.max_people }, (_, i) => i + 1).map((num) => (
               <option key={num} value={num}>
                 {num} {num === 1 ? "pessoa" : "pessoas"}
               </option>
             ))}
           </select>
-        </div>
+        </label>
 
-        {/* Booking Date */}
-        <div>
-          <label htmlFor="bookingDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Data *
-          </label>
+        <label htmlFor="bookingDate" className="block text-sm font-semibold text-slate-700">
+          Data *
           <input
             type="date"
             id="bookingDate"
@@ -98,35 +82,30 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
             required
             min={today}
             max={deal.valid_until}
-            className="input"
+            className="input mt-2"
           />
-        </div>
+        </label>
       </div>
 
-      {/* Notes */}
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-          Pedidos especiais
-        </label>
+      <label htmlFor="notes" className="block text-sm font-semibold text-slate-700">
+        Pedidos especiais
         <textarea
           id="notes"
           name="notes"
           rows={3}
-          className="input resize-none"
-          placeholder="Restrições alimentares, ocasiões especiais..."
+          className="input mt-2 resize-none"
+          placeholder="Restricoes alimentares, aniversario, mesa externa..."
         />
-      </div>
+      </label>
 
-      {/* Submit */}
-      <div className="pt-2">
+      <div className="space-y-3 pt-1">
         <button type="submit" disabled={pending} className="btn-primary w-full">
           {pending ? "Processando..." : "Confirmar reserva"}
         </button>
+        <p className="text-center text-xs text-slate-500">
+          Voce recebera um e-mail de confirmacao. O restaurante retorna em ate 24 horas.
+        </p>
       </div>
-
-      <p className="text-xs text-gray-500 text-center">
-        Você receberá um e-mail de confirmação. O restaurante entrará em contato para confirmar.
-      </p>
     </form>
   );
 }

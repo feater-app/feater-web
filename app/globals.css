@@ -3,37 +3,141 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --primary: 27 64 156;
+    --accent: 237 50 105;
+    --surface: 255 255 255;
+    --text: 12 22 48;
+    --muted: 94 109 139;
+  }
+
+  * {
+    @apply border-slate-200;
+  }
+
   body {
-    @apply bg-white text-gray-900;
+    font-family: var(--font-montserrat), sans-serif;
+    @apply bg-slate-50 text-slate-900;
+    background-image: radial-gradient(circle at 8% -10%, rgba(237, 50, 105, 0.14), transparent 32%),
+      radial-gradient(circle at 92% -20%, rgba(27, 64, 156, 0.2), transparent 40%),
+      linear-gradient(180deg, #f8fbff 0%, #f6f7fb 42%, #f7f8fc 100%);
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-tight;
   }
 }
 
 @layer components {
+  .app-shell {
+    @apply min-h-screen pb-8;
+  }
+
+  .top-nav {
+    @apply sticky top-0 z-20 border-b border-white/50 backdrop-blur-xl;
+    background: linear-gradient(180deg, rgba(250, 252, 255, 0.95) 0%, rgba(248, 250, 255, 0.88) 100%);
+  }
+
+  .nav-inner {
+    @apply mx-auto flex max-w-6xl items-center justify-between px-4 py-3;
+  }
+
+  .brand-logo {
+    @apply h-9 w-auto;
+  }
+
+  .hero-surface {
+    @apply relative overflow-hidden rounded-3xl p-5 text-white shadow-xl md:p-7;
+    background: linear-gradient(138deg, rgb(var(--primary)) 0%, #244cb4 47%, rgb(var(--accent)) 100%);
+  }
+
+  .hero-surface::after {
+    content: "";
+    @apply absolute -right-10 -top-16 h-40 w-40 rounded-full;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.33) 0%, rgba(255, 255, 255, 0) 72%);
+  }
+
+  .chip-row {
+    @apply -mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-1;
+  }
+
+  .chip-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip {
+    @apply snap-start whitespace-nowrap rounded-full border border-primary/15 bg-white px-4 py-2 text-xs font-semibold text-primary shadow-sm;
+  }
+
   .btn-primary {
-    @apply bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-6 rounded-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center rounded-2xl px-6 py-3.5 text-sm font-semibold text-white transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+    background: linear-gradient(135deg, rgb(var(--primary)) 0%, #244cb4 62%, rgb(var(--accent)) 100%);
+    box-shadow: 0 12px 24px rgba(27, 64, 156, 0.3);
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-primary/5 text-primary font-semibold py-3 px-6 rounded-lg border-2 border-primary/20 transition-all active:scale-95;
+    @apply inline-flex items-center justify-center rounded-2xl border border-primary/20 bg-white px-6 py-3.5 text-sm font-semibold text-primary transition-all duration-200 active:scale-[0.98];
+  }
+
+  .btn-secondary:hover {
+    @apply border-primary/30 bg-primary/[0.07];
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow;
+    @apply rounded-3xl border border-white/80 bg-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm;
+  }
+
+  .deal-card {
+    @apply card overflow-hidden transition-all duration-300;
+  }
+
+  .deal-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 22px 34px rgba(15, 23, 42, 0.12);
+  }
+
+  .deal-image-wrap {
+    @apply relative h-52 overflow-hidden;
+  }
+
+  .deal-image-overlay {
+    @apply absolute inset-0;
+    background: linear-gradient(180deg, rgba(12, 22, 48, 0.05) 0%, rgba(12, 22, 48, 0.68) 100%);
+  }
+
+  .metric-pill {
+    @apply rounded-2xl border border-white/25 bg-white/20 px-3 py-2 text-center text-[11px] font-medium text-white/90 backdrop-blur;
   }
 
   .input {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+    @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm transition-all duration-150;
+  }
+
+  .input:focus {
+    @apply border-primary/60 outline-none ring-4 ring-primary/10;
   }
 
   .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
   }
 
   .badge-discount {
-    @apply badge bg-secondary/15 text-secondary-dark;
+    @apply badge border border-white/30 bg-white/25 text-white shadow-md backdrop-blur;
   }
 
   .badge-status {
-    @apply badge bg-yellow-100 text-yellow-800;
+    @apply badge bg-amber-100 text-amber-800;
+  }
+
+  .glass-note {
+    @apply rounded-2xl border border-primary/10 bg-primary/[0.06] px-4 py-3 text-sm text-slate-700;
+  }
+
+  .sticky-action-bar {
+    @apply fixed bottom-0 left-0 right-0 z-30 border-t border-white/80 bg-white/90 p-4 backdrop-blur-xl;
   }
 }
