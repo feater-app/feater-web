@@ -30,7 +30,7 @@ This repository is built to be practical in production and clear to read in publ
 
 - Centralized Supabase env validation in `lib/supabase/env.ts`
 - Atomic write path via `create_booking_with_spot` RPC (insert + spot decrement)
-- Explicit schema and migration SQL under `supabase/`
+- Single source schema under `supabase/schema.sql`
 - PT-BR-first UI copy
 - Brand/theme aligned with the RN app
 
@@ -63,10 +63,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 4. Execute SQL:
 
-- Fresh database: run `supabase/schema.sql`
-- Existing database: run in this order
-  1. `supabase/migrate-permuta.sql`
-  2. `supabase/backfill-permuta.sql`
+- Run `supabase/schema.sql` once (it resets and recreates all Feater tables + seed data)
+
+Note: this script is destructive by design for fast local/dev setup.
 
 5. Start app:
 
@@ -116,8 +115,6 @@ lib/
 
 supabase/
   schema.sql
-  migrate-permuta.sql
-  backfill-permuta.sql
 ```
 
 ## Roadmap (Short)

@@ -4,6 +4,12 @@
 -- Ativa a extensao UUID
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Reset completo (script unico)
+DROP FUNCTION IF EXISTS create_booking_with_spot(UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT);
+DROP TABLE IF EXISTS bookings CASCADE;
+DROP TABLE IF EXISTS deals CASCADE;
+DROP TABLE IF EXISTS restaurants CASCADE;
+
 -- Tabela de restaurantes
 CREATE TABLE restaurants (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
