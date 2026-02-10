@@ -1,13 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { getMockDeal } from "@/lib/mock-data";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const revalidate = 60;
 
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+const isMockMode = !hasSupabaseEnv;
 
 interface DealPageProps {
   params: Promise<{ id: string }>;
@@ -37,13 +39,13 @@ export default async function DealPage({ params }: DealPageProps) {
   if (!deal) notFound();
 
   const daysMap: Record<string, string> = {
-    monday: "Mon",
-    tuesday: "Tue",
-    wednesday: "Wed",
-    thursday: "Thu",
-    friday: "Fri",
-    saturday: "Sat",
-    sunday: "Sun",
+    monday: "Seg",
+    tuesday: "Ter",
+    wednesday: "Qua",
+    thursday: "Qui",
+    friday: "Sex",
+    saturday: "Sab",
+    sunday: "Dom",
   };
 
   return (
@@ -56,7 +58,7 @@ export default async function DealPage({ params }: DealPageProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <h1 className="text-lg font-semibold">Deal Details</h1>
+          <h1 className="text-lg font-semibold">Detalhes da oferta</h1>
         </div>
       </header>
 
@@ -87,33 +89,33 @@ export default async function DealPage({ params }: DealPageProps) {
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-500 mb-1">Available Spots</div>
+              <div className="text-sm text-gray-500 mb-1">Vagas disponíveis</div>
               <div className="text-2xl font-bold text-primary">{deal.available_spots}</div>
             </div>
             <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-500 mb-1">Max People</div>
+              <div className="text-sm text-gray-500 mb-1">Máx. pessoas</div>
               <div className="text-2xl font-bold text-primary">{deal.max_people}</div>
             </div>
           </div>
 
           {/* Validity */}
           <div className="mb-4">
-            <h3 className="font-semibold text-gray-700 mb-2">Valid Period</h3>
+            <h3 className="font-semibold text-gray-700 mb-2">Período de validade</h3>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span>
-                {format(new Date(deal.valid_from), "MMM dd, yyyy")} —{" "}
-                {format(new Date(deal.valid_until), "MMM dd, yyyy")}
+                {format(new Date(deal.valid_from), "dd 'de' MMM 'de' yyyy", { locale: ptBR })} —{" "}
+                {format(new Date(deal.valid_until), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
               </span>
             </div>
           </div>
 
           {/* Available Days */}
           <div>
-            <h3 className="font-semibold text-gray-700 mb-2">Available Days</h3>
+            <h3 className="font-semibold text-gray-700 mb-2">Dias disponíveis</h3>
             <div className="flex flex-wrap gap-2">
               {deal.days_available?.map((day: string) => (
                 <span key={day} className="badge bg-primary/10 text-primary font-medium">
@@ -126,7 +128,7 @@ export default async function DealPage({ params }: DealPageProps) {
 
         {/* Restaurant Info Card */}
         <div className="card p-6">
-          <h3 className="font-bold text-xl mb-4">About the Restaurant</h3>
+          <h3 className="font-bold text-xl mb-4">Sobre o restaurante</h3>
           <div className="flex items-start gap-4 mb-4">
             {deal.restaurant.image_url && (
               <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
@@ -177,7 +179,7 @@ export default async function DealPage({ params }: DealPageProps) {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4">
         <div className="max-w-4xl mx-auto">
           <Link href={`/book/${deal.id}`} className="btn-primary w-full block text-center">
-            Book This Deal
+            Reservar esta oferta
           </Link>
         </div>
       </div>

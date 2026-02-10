@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-white text-gray-900;
   }
 }
 
@@ -14,7 +14,7 @@
   }
 
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-900 font-semibold py-3 px-6 rounded-lg border-2 border-gray-200 transition-all active:scale-95;
+    @apply bg-white hover:bg-primary/5 text-primary font-semibold py-3 px-6 rounded-lg border-2 border-primary/20 transition-all active:scale-95;
   }
 
   .card {
@@ -30,7 +30,7 @@
   }
 
   .badge-discount {
-    @apply badge bg-red-100 text-red-800;
+    @apply badge bg-secondary/15 text-secondary-dark;
   }
 
   .badge-status {
