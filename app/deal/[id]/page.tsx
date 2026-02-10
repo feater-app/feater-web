@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import BrandLogo from "@/components/BrandLogo";
 
 export const revalidate = 60;
 
@@ -78,7 +79,7 @@ export default async function DealPage({ params }: DealPageProps) {
             <span aria-hidden>←</span>
             Voltar
           </Link>
-          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
+          <BrandLogo priority />
         </div>
       </header>
 
