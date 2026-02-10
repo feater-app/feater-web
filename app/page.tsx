@@ -10,7 +10,32 @@ export const revalidate = 60;
 
 const isMockMode = !hasSupabaseEnv;
 
-const quickFilters = ["Hoje", "50%+", "Perto de voce", "Jantar", "Brunch"];
+const quickFilters = ["Feed IG", "Stories", "TikTok", "10k+", "Jantar"];
+
+function formatFollowers(value: number | null | undefined) {
+  if (!value || value <= 0) return null;
+  if (value >= 1000) return `${Math.round(value / 1000)}k`;
+  return `${value}`;
+}
+
+function getDealRequirements(deal: any) {
+  const minFollowers = deal.min_followers ?? null;
+  const feedPosts = deal.min_ig_feed_posts ?? 0;
+  const stories = deal.min_ig_stories ?? 0;
+  const tiktokPosts = deal.min_tiktok_posts ?? 0;
+
+  const deliverables = [
+    feedPosts > 0 ? `${feedPosts} feed IG` : null,
+    stories > 0 ? `${stories} stories` : null,
+    tiktokPosts > 0 ? `${tiktokPosts} TikTok` : null,
+  ].filter(Boolean);
+
+  return {
+    minFollowers,
+    reward: deal.permuta_reward || "Experiencia da casa para creators",
+    deliverables: deliverables.length > 0 ? deliverables.join(" + ") : "Briefing alinhado com o restaurante",
+  };
+}
 
 export default async function HomePage() {
   let deals: any[] = [];
@@ -41,7 +66,7 @@ export default async function HomePage() {
     <div className="app-shell">
       <header className="top-nav">
         <div className="nav-inner">
-          <Image src="/logo-feater.png" alt="Feater" width={126} height={34} className="brand-logo" priority />
+          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
           <span className="rounded-full border border-primary/15 bg-white px-3 py-1 text-[11px] font-semibold text-primary">
             Sao Paulo
           </span>
@@ -52,16 +77,16 @@ export default async function HomePage() {
         <section className="hero-surface">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">Feater curadoria</p>
           <h1 className="mt-2 max-w-[22ch] text-2xl font-semibold leading-tight md:text-4xl">
-            Ofertas com cara de tendencia para sua proxima reserva
+            Permutas para creators com restaurantes em alta
           </h1>
           <p className="mt-3 max-w-[38ch] text-sm text-white/90 md:text-base">
-            Descontos exclusivos, restaurantes em alta e reservas instantaneas em poucos toques.
+            O local oferece experiencia completa e voce entrega conteudo em Instagram e TikTok.
           </p>
 
           <div className="mt-5 grid grid-cols-3 gap-2 md:max-w-xl md:gap-3">
             <div className="metric-pill">
               <p className="text-lg font-bold text-white">{deals.length}</p>
-              <p>ofertas</p>
+              <p>permutas</p>
             </div>
             <div className="metric-pill">
               <p className="text-lg font-bold text-white">24h</p>
@@ -69,7 +94,7 @@ export default async function HomePage() {
             </div>
             <div className="metric-pill">
               <p className="text-lg font-bold text-white">100%</p>
-              <p>mobile first</p>
+              <p>creator focus</p>
             </div>
           </div>
         </section>
@@ -84,8 +109,11 @@ export default async function HomePage() {
 
         {deals.length > 0 ? (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {deals.map((deal: any) => (
-              <Link key={deal.id} href={`/deal/${deal.id}`} className="deal-card group">
+            {deals.map((deal: any) => {
+              const requirements = getDealRequirements(deal);
+
+              return (
+                <Link key={deal.id} href={`/deal/${deal.id}`} className="deal-card group">
                 <div className="deal-image-wrap">
                   <Image
                     src={deal.image_url || deal.restaurant.image_url || "/placeholder.jpg"}
@@ -96,9 +124,11 @@ export default async function HomePage() {
                   />
                   <div className="deal-image-overlay" />
 
-                  {deal.discount_percentage && (
-                    <div className="absolute left-3 top-3 badge-discount">{deal.discount_percentage}% OFF</div>
-                  )}
+                  <div className="absolute left-3 top-3 badge-discount">
+                    {formatFollowers(requirements.minFollowers)
+                      ? `${formatFollowers(requirements.minFollowers)}+ seguidores`
+                      : "Sem minimo de seguidores"}
+                  </div>
 
                   <div className="absolute bottom-3 left-3 right-3 text-white">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
@@ -110,21 +140,27 @@ export default async function HomePage() {
                 </div>
 
                 <div className="space-y-4 p-4">
-                  <p className="line-clamp-2 text-sm text-slate-600">{deal.description || "Oferta por tempo limitado"}</p>
+                  <p className="line-clamp-2 text-sm text-slate-600">{deal.description || "Permuta por tempo limitado"}</p>
+
+                  <div className="rounded-2xl border border-primary/10 bg-primary/[0.04] px-3 py-2 text-xs text-slate-600">
+                    <p className="font-semibold text-primary">Em troca: {requirements.reward}</p>
+                    <p className="mt-1 text-slate-500">Entrega: {requirements.deliverables}</p>
+                  </div>
 
                   <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                    <span>{deal.available_spots} vagas restantes</span>
+                    <span>{deal.available_spots} vagas para creators</span>
                     <span>Ate {format(new Date(deal.valid_until), "dd MMM", { locale: ptBR })}</span>
                   </div>
 
-                  <span className="btn-primary w-full">Reservar agora</span>
+                  <span className="btn-primary w-full">Quero dar feat</span>
                 </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </section>
         ) : (
           <section className="card px-6 py-12 text-center">
-            <p className="text-base font-semibold text-slate-700">Nenhuma oferta disponivel no momento</p>
+            <p className="text-base font-semibold text-slate-700">Nenhuma permuta disponivel no momento</p>
             <p className="mt-2 text-sm text-slate-500">Volte em breve para novas oportunidades.</p>
           </section>
         )}

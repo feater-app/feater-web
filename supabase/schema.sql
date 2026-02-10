@@ -24,8 +24,13 @@ CREATE TABLE deals (
   restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
+  permuta_reward TEXT,
   image_url TEXT,
   discount_percentage INTEGER,
+  min_followers INTEGER DEFAULT 0,
+  min_ig_feed_posts INTEGER DEFAULT 0,
+  min_ig_stories INTEGER DEFAULT 0,
+  min_tiktok_posts INTEGER DEFAULT 0,
   max_people INTEGER NOT NULL DEFAULT 2,
   available_spots INTEGER NOT NULL DEFAULT 10,
   valid_from DATE NOT NULL,
@@ -181,9 +186,24 @@ INSERT INTO restaurants (name, description, category, address, instagram_handle,
   ('Burger House', 'Hambúrgueres gourmets feitos com carinho', 'Americana', 'Rua Oscar Freire, 789 - São Paulo', '@burgerhouse', 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800'),
   ('Taco Loco', 'Comida de rua mexicana no seu melhor', 'Mexicana', 'Vila Madalena, 321 - São Paulo', '@tacoloco', 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800');
 
-INSERT INTO deals (restaurant_id, title, description, discount_percentage, max_people, available_spots, valid_from, valid_until, days_available) VALUES
-  ((SELECT id FROM restaurants WHERE name = 'Bella Italia'), 'Noite da Pizza com 50% OFF', 'Ganhe 50% de desconto em todas as pizzas às terças e quintas', 50, 4, 20, CURRENT_DATE, CURRENT_DATE + INTERVAL '3 months', ARRAY['tuesday', 'thursday']),
-  ((SELECT id FROM restaurants WHERE name = 'Sushi Master'), 'Combo de Sushi para 2', 'Combo especial com 40 peças + 2 bebidas', 30, 2, 15, CURRENT_DATE, CURRENT_DATE + INTERVAL '2 months', ARRAY['monday', 'wednesday', 'friday']),
-  ((SELECT id FROM restaurants WHERE name = 'Burger House'), 'Compre 1 e Leve 2 Hambúrgueres', 'Compre um hambúrguer gourmet e ganhe outro grátis', 50, 2, 30, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month', ARRAY['monday', 'tuesday', 'wednesday', 'thursday', 'friday']),
-  ((SELECT id FROM restaurants WHERE name = 'Taco Loco'), 'Especial de Taco na Terça', '3 tacos + bebida por um preço especial', 40, 4, 25, CURRENT_DATE, CURRENT_DATE + INTERVAL '3 months', ARRAY['tuesday']),
-  ((SELECT id FROM restaurants WHERE name = 'Bella Italia'), 'Brunch de Fim de Semana', 'Brunch à vontade aos fins de semana', 35, 6, 12, CURRENT_DATE, CURRENT_DATE + INTERVAL '2 months', ARRAY['saturday', 'sunday']);
+INSERT INTO deals (
+  restaurant_id,
+  title,
+  description,
+  permuta_reward,
+  discount_percentage,
+  min_followers,
+  min_ig_feed_posts,
+  min_ig_stories,
+  min_tiktok_posts,
+  max_people,
+  available_spots,
+  valid_from,
+  valid_until,
+  days_available
+) VALUES
+  ((SELECT id FROM restaurants WHERE name = 'Bella Italia'), 'Noite da Pizza para creators', 'Experiencia de pizza + drinks para creators que topam produzir conteudo no local', '1 pizza premium + 2 drinks por creator', NULL, 10000, 1, 3, 1, 4, 20, CURRENT_DATE, CURRENT_DATE + INTERVAL '3 months', ARRAY['tuesday', 'thursday']),
+  ((SELECT id FROM restaurants WHERE name = 'Sushi Master'), 'Sushi omakase em permuta', 'Sessao omakase para creators de gastronomia e lifestyle com entrega de conteudo', 'Omakase para 2 + 1 sobremesa da casa', NULL, 15000, 1, 4, 1, 2, 15, CURRENT_DATE, CURRENT_DATE + INTERVAL '2 months', ARRAY['monday', 'wednesday', 'friday']),
+  ((SELECT id FROM restaurants WHERE name = 'Burger House'), 'Burger tasting creator night', 'Degustacao de burgers assinatura para creators com foco em reels de comida', 'Menu degustacao + 2 bebidas especiais', NULL, 8000, 1, 2, 0, 2, 30, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month', ARRAY['monday', 'tuesday', 'wednesday', 'thursday', 'friday']),
+  ((SELECT id FROM restaurants WHERE name = 'Taco Loco'), 'Taco experience para UGC creators', 'Combo de tacos com drink autoral para creators que entregam conteudo rapido e autentico', 'Trio de tacos + drink da casa', NULL, 5000, 0, 3, 1, 4, 25, CURRENT_DATE, CURRENT_DATE + INTERVAL '3 months', ARRAY['tuesday']),
+  ((SELECT id FROM restaurants WHERE name = 'Bella Italia'), 'Brunch premium collab', 'Brunch completo com foco em creators de lifestyle, viagens e experiencias em casal', 'Brunch completo + 2 mimosas', NULL, 12000, 1, 3, 1, 6, 12, CURRENT_DATE, CURRENT_DATE + INTERVAL '2 months', ARRAY['saturday', 'sunday']);

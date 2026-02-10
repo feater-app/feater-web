@@ -8,16 +8,22 @@ import BookingForm from "@/components/BookingForm";
 
 const isMockMode = !hasSupabaseEnv;
 
+function formatFollowers(value: number | null | undefined) {
+  if (!value || value <= 0) return null;
+  if (value >= 1000) return `${Math.round(value / 1000)}k`;
+  return `${value}`;
+}
+
 interface BookingPageProps {
   params: Promise<{ dealId: string }>;
   searchParams: Promise<{ error?: string }>;
 }
 
 const errorMessages: Record<string, string> = {
-  no_spots: "Nao ha vagas disponiveis para esta oferta no momento.",
-  invalid_party_size: "A quantidade de pessoas selecionada nao e valida para esta oferta.",
-  deal_not_found: "Esta oferta nao esta mais disponivel.",
-  failed: "Nao foi possivel concluir sua reserva. Tente novamente.",
+  no_spots: "Nao ha vagas disponiveis para esta permuta no momento.",
+  invalid_party_size: "A quantidade de pessoas selecionada nao e valida para esta permuta.",
+  deal_not_found: "Esta permuta nao esta mais disponivel.",
+  failed: "Nao foi possivel enviar sua candidatura. Tente novamente.",
 };
 
 export default async function BookingPage({ params, searchParams }: BookingPageProps) {
@@ -48,7 +54,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
             <span aria-hidden>←</span>
             Oferta
           </Link>
-          <Image src="/logo-feater.png" alt="Feater" width={118} height={32} className="brand-logo" priority />
+          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
         </div>
       </header>
 
@@ -67,7 +73,9 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
               <p className="line-clamp-1 text-lg font-semibold text-slate-900">{deal.title}</p>
               <p className="text-sm text-slate-500">{deal.restaurant.name}</p>
               <div className="mt-2 inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                {deal.discount_percentage}% OFF
+                {formatFollowers(deal.min_followers)
+                  ? `${formatFollowers(deal.min_followers)}+ seguidores`
+                  : "Sem minimo de seguidores"}
               </div>
             </div>
           </div>

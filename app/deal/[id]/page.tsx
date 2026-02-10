@@ -11,6 +11,27 @@ export const revalidate = 60;
 
 const isMockMode = !hasSupabaseEnv;
 
+function formatFollowers(value: number | null | undefined) {
+  if (!value || value <= 0) return null;
+  if (value >= 1000) return `${Math.round(value / 1000)}k`;
+  return `${value}`;
+}
+
+function getDealRequirements(deal: any) {
+  const minFollowers = deal.min_followers ?? null;
+  const igFeed = deal.min_ig_feed_posts ?? 0;
+  const igStories = deal.min_ig_stories ?? 0;
+  const tiktok = deal.min_tiktok_posts ?? 0;
+
+  return {
+    minFollowers,
+    igFeed,
+    igStories,
+    tiktok,
+    reward: deal.permuta_reward || "Experiencia da casa para creators",
+  };
+}
+
 interface DealPageProps {
   params: Promise<{ id: string }>;
 }
@@ -37,6 +58,7 @@ export default async function DealPage({ params }: DealPageProps) {
   }
 
   if (!deal) notFound();
+  const requirements = getDealRequirements(deal);
 
   const daysMap: Record<string, string> = {
     monday: "Seg",
@@ -56,7 +78,7 @@ export default async function DealPage({ params }: DealPageProps) {
             <span aria-hidden>←</span>
             Voltar
           </Link>
-          <Image src="/logo-feater.png" alt="Feater" width={118} height={32} className="brand-logo" priority />
+          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
         </div>
       </header>
 
@@ -73,7 +95,11 @@ export default async function DealPage({ params }: DealPageProps) {
             />
             <div className="deal-image-overlay" />
 
-            <div className="absolute left-4 top-4 badge-discount">{deal.discount_percentage}% OFF</div>
+            <div className="absolute left-4 top-4 badge-discount">
+              {formatFollowers(requirements.minFollowers)
+                ? `${formatFollowers(requirements.minFollowers)}+ seguidores`
+                : "Sem minimo de seguidores"}
+            </div>
 
             <div className="absolute inset-x-0 bottom-0 p-4 text-white md:p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/75">{deal.restaurant.category}</p>
@@ -85,27 +111,42 @@ export default async function DealPage({ params }: DealPageProps) {
           <div className="space-y-5 p-5 md:p-6">
             <p className="text-sm leading-relaxed text-slate-600 md:text-base">{deal.description}</p>
 
+            <div className="rounded-2xl border border-primary/10 bg-primary/[0.05] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Permuta oferecida</p>
+              <p className="mt-2 text-sm font-medium text-slate-700">{requirements.reward}</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <div className="rounded-2xl bg-slate-50 p-3">
                 <p className="text-xs text-slate-500">Vagas</p>
                 <p className="mt-1 text-xl font-semibold text-primary">{deal.available_spots}</p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Max pessoas</p>
-                <p className="mt-1 text-xl font-semibold text-primary">{deal.max_people}</p>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Inicio</p>
-                <p className="mt-1 text-sm font-semibold text-slate-700">
-                  {format(new Date(deal.valid_from), "dd MMM", { locale: ptBR })}
+                <p className="text-xs text-slate-500">Min seguidores</p>
+                <p className="mt-1 text-xl font-semibold text-primary">
+                  {formatFollowers(requirements.minFollowers)
+                    ? `${formatFollowers(requirements.minFollowers)}+`
+                    : "Livre"}
                 </p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Validade</p>
+                <p className="text-xs text-slate-500">Feed IG</p>
                 <p className="mt-1 text-sm font-semibold text-slate-700">
-                  {format(new Date(deal.valid_until), "dd MMM", { locale: ptBR })}
+                  {requirements.igFeed || 0} posts
                 </p>
               </div>
+              <div className="rounded-2xl bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">TikTok</p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">
+                  {requirements.tiktok || 0} posts
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600">
+              Stories minimos: <span className="font-semibold text-slate-800">{requirements.igStories || 0}</span>
+              <span className="mx-2">•</span>
+              Validade ate <span className="font-semibold text-slate-800">{format(new Date(deal.valid_until), "dd MMM", { locale: ptBR })}</span>
             </div>
 
             <div>
@@ -154,7 +195,7 @@ export default async function DealPage({ params }: DealPageProps) {
       <div className="sticky-action-bar">
         <div className="mx-auto max-w-4xl">
           <Link href={`/book/${deal.id}`} className="btn-primary w-full">
-            Reservar esta oferta
+            Quero me candidatar
           </Link>
         </div>
       </div>

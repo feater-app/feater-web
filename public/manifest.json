@@ -1,7 +1,7 @@
 {
-  "name": "Feater - Ofertas de Restaurantes",
+  "name": "Feater - Permutas para Creators",
   "short_name": "Feater",
-  "description": "Encontre e reserve ofertas exclusivas de restaurantes perto de você",
+  "description": "Conecte-se a restaurantes e feche permutas com entregas de conteudo",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

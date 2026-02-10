@@ -57,7 +57,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
     <div className="app-shell">
       <header className="top-nav">
         <div className="nav-inner justify-center">
-          <Image src="/logo-feater.png" alt="Feater" width={124} height={34} className="brand-logo" priority />
+          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
         </div>
       </header>
 
@@ -68,17 +68,17 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold">Reserva confirmada!</h1>
-          <p className="mt-2 text-sm text-white/90">Seu pedido foi enviado e o restaurante vai responder em breve.</p>
+          <h1 className="text-2xl font-semibold">Candidatura enviada!</h1>
+          <p className="mt-2 text-sm text-white/90">Seu interesse na permuta foi enviado para avaliacao do restaurante.</p>
         </section>
 
         {booking && (
           <section className="card space-y-3 p-5">
-            <p className="text-base font-semibold text-slate-900">Detalhes da reserva</p>
+            <p className="text-base font-semibold text-slate-900">Detalhes da candidatura</p>
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Oferta</span>
+                <span className="text-slate-500">Permuta</span>
                 <span className="text-right font-semibold text-slate-800">{booking.deal.title}</span>
               </div>
               <div className="flex justify-between gap-4">
@@ -112,17 +112,17 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
         <section className="card space-y-2 p-5 text-sm text-slate-600">
           <p className="font-semibold text-slate-900">Proximos passos</p>
           <p>• Voce recebe um e-mail de confirmacao</p>
-          <p>• O restaurante revisa sua solicitacao</p>
-          <p>• Retorno esperado em ate 24 horas</p>
+          <p>• O restaurante revisa seu perfil e briefing</p>
+          <p>• Se aprovado, voces alinham data e entregas</p>
         </section>
 
         <div className="space-y-2">
           <Link href="/" className="btn-primary w-full">
-            Ver mais ofertas
+            Ver mais permutas
           </Link>
           {booking?.deal_id && (
             <Link href={`/deal/${booking.deal_id}`} className="btn-secondary w-full">
-              Ver detalhes da oferta
+              Ver detalhes da permuta
             </Link>
           )}
         </div>

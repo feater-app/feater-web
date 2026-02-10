@@ -19,15 +19,15 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
     <form action={action} className="card space-y-5 p-5 md:p-6">
       {isMockMode && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Modo demonstracao: as reservas nao sao salvas permanentemente sem Supabase conectado.
+          Modo demonstracao: as candidaturas nao sao salvas permanentemente sem Supabase conectado.
         </div>
       )}
 
       <input type="hidden" name="dealId" value={deal.id} />
 
       <div>
-        <p className="text-xl font-semibold text-slate-900">Concluir reserva</p>
-        <p className="mt-1 text-sm text-slate-500">Preencha seus dados e finalize em poucos toques.</p>
+        <p className="text-xl font-semibold text-slate-900">Enviar candidatura</p>
+        <p className="mt-1 text-sm text-slate-500">Informe seu contato e disponibilidade para fechar a permuta.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -87,23 +87,23 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
         </label>
       </div>
 
-      <label htmlFor="notes" className="block text-sm font-semibold text-slate-700">
-        Pedidos especiais
+        <label htmlFor="notes" className="block text-sm font-semibold text-slate-700">
+        Pitch rapido
         <textarea
           id="notes"
           name="notes"
           rows={3}
           className="input mt-2 resize-none"
-          placeholder="Restricoes alimentares, aniversario, mesa externa..."
+          placeholder="Seu nicho, formato de conteudo e ideias para esta collab..."
         />
       </label>
 
       <div className="space-y-3 pt-1">
         <button type="submit" disabled={pending} className="btn-primary w-full">
-          {pending ? "Processando..." : "Confirmar reserva"}
+          {pending ? "Enviando..." : "Enviar candidatura"}
         </button>
         <p className="text-center text-xs text-slate-500">
-          Voce recebera um e-mail de confirmacao. O restaurante retorna em ate 24 horas.
+          Voce recebe confirmacao por e-mail e o restaurante retorna em ate 24 horas.
         </p>
       </div>
     </form>
