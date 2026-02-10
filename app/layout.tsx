@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Feater - Discover Amazing Restaurant Deals",
-  description: "Find and book exclusive restaurant deals near you",
+  title: "Feater - Descubra ofertas incríveis em restaurantes",
+  description: "Encontre e reserve ofertas exclusivas de restaurantes perto de você",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -17,7 +17,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#FF6B35",
+  themeColor: "#1B409C",
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/icon-192.png" />

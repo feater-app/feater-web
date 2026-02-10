@@ -1,12 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { mockDeals } from "@/lib/mock-data";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
 
 export const revalidate = 60;
 
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+const isMockMode = !hasSupabaseEnv;
 
 export default async function HomePage() {
   let deals: any[] = [];
@@ -40,7 +42,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-primary">Feater</h1>
           <p className="text-sm text-gray-600">
-            Discover amazing restaurant deals
+            Descubra ofertas incríveis em restaurantes
           </p>
         </div>
       </header>
@@ -50,10 +52,10 @@ export default async function HomePage() {
         {/* Stats Bar */}
         <div className="bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl p-6 mb-6">
           <h2 className="text-3xl font-bold mb-2">
-            {deals?.length || 0} Deals Available
+            {deals?.length || 0} ofertas disponíveis
           </h2>
           <p className="text-white/90">
-            Save money while supporting local restaurants
+            Economize enquanto apoia restaurantes locais
           </p>
         </div>
 
@@ -94,7 +96,7 @@ export default async function HomePage() {
                     {deal.title}
                   </h3>
                   <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                    {deal.description || "Limited time offer"}
+                    {deal.description || "Oferta por tempo limitado"}
                   </p>
 
                   {/* Restaurant */}
@@ -124,10 +126,10 @@ export default async function HomePage() {
                   {/* Availability */}
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>
-                      {deal.available_spots} spots left
+                      {deal.available_spots} vagas restantes
                     </span>
                     <span>
-                      Until {format(new Date(deal.valid_until), "MMM dd")}
+                      Até {format(new Date(deal.valid_until), "dd MMM", { locale: ptBR })}
                     </span>
                   </div>
                 </div>
@@ -135,7 +137,7 @@ export default async function HomePage() {
                 {/* CTA */}
                 <div className="px-4 pb-4">
                   <div className="btn-primary w-full text-center">
-                    Book Now
+                    Reservar agora
                   </div>
                 </div>
               </Link>
@@ -144,9 +146,9 @@ export default async function HomePage() {
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">
-              No deals available at the moment
+              Nenhuma oferta disponível no momento
             </p>
-            <p className="text-gray-400 text-sm mt-2">Check back soon!</p>
+            <p className="text-gray-400 text-sm mt-2">Volte em breve!</p>
           </div>
         )}
       </main>
@@ -154,7 +156,7 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="bg-white border-t mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 text-center text-sm text-gray-500">
-          <p>&copy; 2026 Feater. All rights reserved.</p>
+          <p>&copy; 2026 Feater. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

@@ -1,11 +1,11 @@
 {
-  "name": "Feater - Restaurant Deals",
+  "name": "Feater - Ofertas de Restaurantes",
   "short_name": "Feater",
-  "description": "Find and book exclusive restaurant deals near you",
+  "description": "Encontre e reserve ofertas exclusivas de restaurantes perto de você",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#FF6B35",
+  "theme_color": "#1B409C",
   "orientation": "portrait",
   "icons": [
     {

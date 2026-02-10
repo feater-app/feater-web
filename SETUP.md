@@ -22,6 +22,8 @@
 6. Click "Run" (bottom right)
 7. You should see "Success" - tables and sample data are now created!
 
+If you already ran an older schema before this update, re-run the latest `supabase/schema.sql` so the atomic booking function (`create_booking_with_spot`) is created.
+
 ### Step 3: Get API Credentials (30 seconds)
 
 1. In Supabase dashboard, click "Settings" (left sidebar)
@@ -47,8 +49,8 @@
 ### Step 5: Run the App! (1 minute)
 
 ```bash
-npm install
-npm run dev
+bun install
+bun dev
 ```
 
 Open http://localhost:3000 - you should see 5 restaurant deals! 🎉
@@ -154,14 +156,14 @@ Ideas to extend:
 
 **"Module not found" error**
 ```bash
-rm -rf node_modules package-lock.json
-npm install
+rm -rf node_modules bun.lock
+bun install
 ```
 
 **Can't connect to Supabase**
 - Check your `.env.local` file
 - Make sure you have NEXT_PUBLIC_ prefix
-- Restart dev server: stop (Ctrl+C) then `npm run dev`
+- Restart dev server: stop (Ctrl+C) then `bun dev`
 
 **No deals showing**
 - Make sure you ran the schema.sql in Supabase
@@ -170,13 +172,13 @@ npm install
 
 **TypeScript errors**
 ```bash
-npx tsc --noEmit
+bunx tsc --noEmit
 ```
 
 **Build errors**
 ```bash
 rm -rf .next
-npm run dev
+bun dev
 ```
 
 ## Getting Help

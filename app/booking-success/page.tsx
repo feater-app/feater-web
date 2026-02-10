@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getMockDeal } from "@/lib/mock-data";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import Link from "next/link";
 
 interface SuccessPageProps {
@@ -20,6 +21,11 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
 
   // Build a display object from either real DB or mock query params
   let booking: any = null;
+  const statusMap: Record<string, string> = {
+    pending: "pendente",
+    confirmed: "confirmada",
+    cancelled: "cancelada",
+  };
 
   if (mock === "true" && dealId) {
     // Mock mode: reconstruct from URL params
@@ -70,46 +76,46 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Booking Confirmed!</h1>
-          <p className="text-gray-600">Your reservation has been successfully submitted</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Reserva confirmada!</h1>
+          <p className="text-gray-600">Sua solicitação de reserva foi enviada com sucesso</p>
         </div>
 
         {/* Booking Details */}
         {booking && (
           <div className="card p-6 mb-6">
-            <h2 className="font-bold mb-4">Booking Details</h2>
+            <h2 className="font-bold mb-4">Detalhes da reserva</h2>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Deal:</span>
+                <span className="text-gray-600">Oferta:</span>
                 <span className="font-medium text-right">{booking.deal.title}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Restaurant:</span>
+                <span className="text-gray-600">Restaurante:</span>
                 <span className="font-medium">{booking.deal.restaurant.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Name:</span>
+                <span className="text-gray-600">Nome:</span>
                 <span className="font-medium">{booking.user_name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Date:</span>
+                <span className="text-gray-600">Data:</span>
                 <span className="font-medium">
-                  {format(new Date(booking.booking_date + "T12:00:00"), "MMMM dd, yyyy")}
+                  {format(new Date(booking.booking_date + "T12:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">People:</span>
+                <span className="text-gray-600">Pessoas:</span>
                 <span className="font-medium">{booking.num_people}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Status:</span>
-                <span className="badge-status capitalize">{booking.status}</span>
+                <span className="badge-status capitalize">{statusMap[booking.status] ?? booking.status}</span>
               </div>
             </div>
 
             {booking.deal.restaurant.address && (
               <div className="mt-4 pt-4 border-t">
-                <p className="text-xs text-gray-500 mb-1">Location</p>
+                <p className="text-xs text-gray-500 mb-1">Localização</p>
                 <p className="text-sm">{booking.deal.restaurant.address}</p>
               </div>
             )}
@@ -133,11 +139,11 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
               />
             </svg>
             <div className="text-sm text-gray-700">
-              <p className="font-medium mb-1">What happens next?</p>
+              <p className="font-medium mb-1">O que acontece agora?</p>
               <ul className="space-y-1 text-gray-600">
-                <li>• You&apos;ll receive a confirmation email shortly</li>
-                <li>• The restaurant will review your booking</li>
-                <li>• You&apos;ll be contacted within 24 hours</li>
+                <li>• Você receberá um e-mail de confirmação em breve</li>
+                <li>• O restaurante irá analisar sua reserva</li>
+                <li>• Você será contatado em até 24 horas</li>
               </ul>
             </div>
           </div>
@@ -146,11 +152,11 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
         {/* Actions */}
         <div className="space-y-3">
           <Link href="/" className="btn-primary w-full block text-center">
-            Browse More Deals
+            Ver mais ofertas
           </Link>
           {booking?.deal_id && (
             <Link href={`/deal/${booking.deal_id}`} className="btn-secondary w-full block text-center">
-              View Deal Details
+              Ver detalhes da oferta
             </Link>
           )}
         </div>

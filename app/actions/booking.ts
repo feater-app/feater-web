@@ -2,9 +2,20 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { mockBookings } from "@/lib/mock-data";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { redirect } from "next/navigation";
 
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+const isMockMode = !hasSupabaseEnv;
+
+function mapBookingError(message: string | undefined) {
+  const normalized = message?.toUpperCase() ?? "";
+
+  if (normalized.includes("NO_SPOTS")) return "no_spots";
+  if (normalized.includes("INVALID_PARTY_SIZE")) return "invalid_party_size";
+  if (normalized.includes("DEAL_NOT_FOUND")) return "deal_not_found";
+
+  return "failed";
+}
 
 export async function createBooking(formData: FormData) {
   const dealId = formData.get("dealId") as string;
@@ -33,44 +44,22 @@ export async function createBooking(formData: FormData) {
     redirect(`/booking-success?id=${mockId}&mock=true&dealId=${dealId}&name=${encodeURIComponent(name)}&date=${bookingDate}&people=${numPeople}`);
   }
 
-  // Real Supabase mode
+  // Real Supabase mode (atomic DB function)
   const supabase = await createClient();
 
-  // Check available spots
-  const { data: deal } = await supabase
-    .from("deals")
-    .select("available_spots")
-    .eq("id", dealId)
-    .single();
+  const { data: bookingId, error } = await supabase.rpc("create_booking_with_spot", {
+    p_deal_id: dealId,
+    p_user_name: name,
+    p_user_email: email,
+    p_user_phone: phone,
+    p_num_people: numPeople,
+    p_booking_date: bookingDate,
+    p_notes: notes,
+  });
 
-  if (!deal || deal.available_spots < 1) {
-    redirect(`/book/${dealId}?error=no_spots`);
+  if (error || !bookingId) {
+    redirect(`/book/${dealId}?error=${mapBookingError(error?.message)}`);
   }
 
-  const { data: booking, error } = await supabase
-    .from("bookings")
-    .insert({
-      deal_id: dealId,
-      user_name: name,
-      user_email: email,
-      user_phone: phone,
-      num_people: numPeople,
-      booking_date: bookingDate,
-      notes,
-      status: "pending",
-    })
-    .select()
-    .single();
-
-  if (error || !booking) {
-    redirect(`/book/${dealId}?error=failed`);
-  }
-
-  // Decrement available spots
-  await supabase
-    .from("deals")
-    .update({ available_spots: deal.available_spots - 1 })
-    .eq("id", dealId);
-
-  redirect(`/booking-success?id=${booking.id}`);
+  redirect(`/booking-success?id=${bookingId}`);
 }

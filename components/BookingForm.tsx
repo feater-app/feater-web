@@ -19,18 +19,18 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
     <form action={action} className="card p-6 space-y-4">
       {isMockMode && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
-          Demo mode — bookings won&apos;t be saved permanently. Connect Supabase to persist data.
+          Modo demonstração — as reservas não serão salvas permanentemente. Conecte o Supabase para persistir os dados.
         </div>
       )}
 
       <input type="hidden" name="dealId" value={deal.id} />
 
-      <h3 className="font-bold text-lg">Your Information</h3>
+      <h3 className="font-bold text-lg">Seus dados</h3>
 
       {/* Name */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-          Full Name *
+          Nome completo *
         </label>
         <input
           type="text"
@@ -38,14 +38,14 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
           name="name"
           required
           className="input"
-          placeholder="John Doe"
+          placeholder="João da Silva"
         />
       </div>
 
       {/* Email */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email Address *
+          E-mail *
         </label>
         <input
           type="email"
@@ -60,7 +60,7 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
       {/* Phone */}
       <div>
         <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-          Phone Number
+          Telefone
         </label>
         <input
           type="tel"
@@ -75,12 +75,12 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
         {/* Number of People */}
         <div>
           <label htmlFor="numPeople" className="block text-sm font-medium text-gray-700 mb-1">
-            People *
+            Pessoas *
           </label>
           <select id="numPeople" name="numPeople" required className="input">
             {Array.from({ length: deal.max_people }, (_, i) => i + 1).map((num) => (
               <option key={num} value={num}>
-                {num} {num === 1 ? "person" : "people"}
+                {num} {num === 1 ? "pessoa" : "pessoas"}
               </option>
             ))}
           </select>
@@ -89,7 +89,7 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
         {/* Booking Date */}
         <div>
           <label htmlFor="bookingDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Date *
+            Data *
           </label>
           <input
             type="date"
@@ -106,26 +106,26 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
       {/* Notes */}
       <div>
         <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-          Special Requests
+          Pedidos especiais
         </label>
         <textarea
           id="notes"
           name="notes"
           rows={3}
           className="input resize-none"
-          placeholder="Dietary restrictions, special occasions..."
+          placeholder="Restrições alimentares, ocasiões especiais..."
         />
       </div>
 
       {/* Submit */}
       <div className="pt-2">
         <button type="submit" disabled={pending} className="btn-primary w-full">
-          {pending ? "Processing..." : "Confirm Booking"}
+          {pending ? "Processando..." : "Confirmar reserva"}
         </button>
       </div>
 
       <p className="text-xs text-gray-500 text-center">
-        You&apos;ll receive a confirmation email. The restaurant will contact you to confirm.
+        Você receberá um e-mail de confirmação. O restaurante entrará em contato para confirmar.
       </p>
     </form>
   );

@@ -27,7 +27,7 @@ A modern, mobile-first web application for discovering and booking restaurant de
 
 ```bash
 cd feater-web
-npm install
+bun install
 ```
 
 ### 2. Set Up Supabase
@@ -47,6 +47,7 @@ This will create:
 - `restaurants` table
 - `deals` table
 - `bookings` table
+- `create_booking_with_spot` function (atomic booking + availability decrement)
 - Row Level Security policies
 - Sample data (4 restaurants + 5 deals)
 
@@ -68,7 +69,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ### 5. Run Development Server
 
 ```bash
-npm run dev
+bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -210,7 +211,7 @@ Replace placeholder images in the database with real images:
 ## Troubleshooting
 
 **Issue**: "Module not found" errors
-- Run `npm install` again
+- Run `bun install` again
 - Delete `node_modules` and `.next`, then reinstall
 
 **Issue**: Supabase connection fails

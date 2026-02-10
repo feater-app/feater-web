@@ -1,10 +1,10 @@
--- Feater Database Schema
--- Run this in Supabase SQL Editor: https://supabase.com/dashboard/project/_/sql
+-- Esquema de banco de dados da Feater
+-- Execute no Editor SQL do Supabase: https://supabase.com/dashboard/project/_/sql
 
--- Enable UUID extension
+-- Ativa a extensao UUID
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Restaurants table
+-- Tabela de restaurantes
 CREATE TABLE restaurants (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE restaurants (
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL
 );
 
--- Deals table
+-- Tabela de ofertas
 CREATE TABLE deals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE deals (
   active BOOLEAN DEFAULT true
 );
 
--- Bookings table
+-- Tabela de reservas
 CREATE TABLE bookings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
@@ -49,37 +49,37 @@ CREATE TABLE bookings (
   notes TEXT
 );
 
--- Create indexes for better query performance
+-- Indices para melhorar performance de consultas
 CREATE INDEX idx_deals_restaurant_id ON deals(restaurant_id);
 CREATE INDEX idx_deals_active ON deals(active);
 CREATE INDEX idx_bookings_deal_id ON bookings(deal_id);
 CREATE INDEX idx_bookings_user_id ON bookings(user_id);
 CREATE INDEX idx_bookings_status ON bookings(status);
 
--- Row Level Security (RLS) Policies
+-- Politicas de Row Level Security (RLS)
 ALTER TABLE restaurants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE deals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 
--- Restaurants: Everyone can read, only owners can modify
-CREATE POLICY "Restaurants are viewable by everyone"
+-- Restaurantes: todos podem ler, apenas donos podem modificar
+CREATE POLICY "Restaurantes visiveis por todos"
   ON restaurants FOR SELECT
   USING (true);
 
-CREATE POLICY "Users can insert their own restaurants"
+CREATE POLICY "Usuarios inserem os proprios restaurantes"
   ON restaurants FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own restaurants"
+CREATE POLICY "Usuarios atualizam os proprios restaurantes"
   ON restaurants FOR UPDATE
   USING (auth.uid() = user_id);
 
--- Deals: Everyone can read active deals
-CREATE POLICY "Active deals are viewable by everyone"
+-- Ofertas: todos podem ler ofertas ativas
+CREATE POLICY "Ofertas ativas visiveis por todos"
   ON deals FOR SELECT
   USING (active = true);
 
-CREATE POLICY "Restaurant owners can manage their deals"
+CREATE POLICY "Donos de restaurante podem gerenciar ofertas"
   ON deals FOR ALL
   USING (
     restaurant_id IN (
@@ -87,16 +87,16 @@ CREATE POLICY "Restaurant owners can manage their deals"
     )
   );
 
--- Bookings: Users can read their own bookings
-CREATE POLICY "Users can view their own bookings"
+-- Reservas: usuarios podem ler as proprias reservas
+CREATE POLICY "Usuarios visualizam as proprias reservas"
   ON bookings FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Anyone can create bookings"
+CREATE POLICY "Qualquer pessoa pode criar reservas"
   ON bookings FOR INSERT
   WITH CHECK (true);
 
-CREATE POLICY "Restaurant owners can view bookings for their deals"
+CREATE POLICY "Donos de restaurante visualizam reservas das ofertas"
   ON bookings FOR SELECT
   USING (
     deal_id IN (
@@ -106,16 +106,84 @@ CREATE POLICY "Restaurant owners can view bookings for their deals"
     )
   );
 
--- Sample data for testing
+-- Criacao atomica de reserva (insere reserva + decrementa vagas)
+CREATE OR REPLACE FUNCTION create_booking_with_spot(
+  p_deal_id UUID,
+  p_user_name TEXT,
+  p_user_email TEXT,
+  p_user_phone TEXT,
+  p_num_people INTEGER,
+  p_booking_date DATE,
+  p_notes TEXT
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_booking_id UUID;
+  v_max_people INTEGER;
+BEGIN
+  SELECT max_people INTO v_max_people
+  FROM deals
+  WHERE id = p_deal_id AND active = true;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'DEAL_NOT_FOUND';
+  END IF;
+
+  IF p_num_people < 1 OR p_num_people > v_max_people THEN
+    RAISE EXCEPTION 'INVALID_PARTY_SIZE';
+  END IF;
+
+  UPDATE deals
+  SET available_spots = available_spots - 1
+  WHERE id = p_deal_id AND available_spots > 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'NO_SPOTS';
+  END IF;
+
+  INSERT INTO bookings (
+    deal_id,
+    user_name,
+    user_email,
+    user_phone,
+    num_people,
+    booking_date,
+    notes,
+    status
+  )
+  VALUES (
+    p_deal_id,
+    p_user_name,
+    p_user_email,
+    p_user_phone,
+    p_num_people,
+    p_booking_date,
+    p_notes,
+    'pending'
+  )
+  RETURNING id INTO v_booking_id;
+
+  RETURN v_booking_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION create_booking_with_spot(UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_booking_with_spot(UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT) TO anon, authenticated;
+
+-- Dados de exemplo para testes
 INSERT INTO restaurants (name, description, category, address, instagram_handle, image_url) VALUES
-  ('Bella Italia', 'Authentic Italian cuisine in the heart of the city', 'Italian', 'Rua Augusta, 123 - São Paulo', '@bellaitalia', 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800'),
-  ('Sushi Master', 'Fresh sushi and Japanese delicacies', 'Japanese', 'Av. Paulista, 456 - São Paulo', '@sushimaster', 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800'),
-  ('Burger House', 'Gourmet burgers made with love', 'American', 'Rua Oscar Freire, 789 - São Paulo', '@burgerhouse', 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800'),
-  ('Taco Loco', 'Mexican street food at its finest', 'Mexican', 'Vila Madalena, 321 - São Paulo', '@tacoloco', 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800');
+  ('Bella Italia', 'Culinária italiana autêntica no coração da cidade', 'Italiana', 'Rua Augusta, 123 - São Paulo', '@bellaitalia', 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800'),
+  ('Sushi Master', 'Sushi fresco e delícias japonesas', 'Japonesa', 'Av. Paulista, 456 - São Paulo', '@sushimaster', 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800'),
+  ('Burger House', 'Hambúrgueres gourmets feitos com carinho', 'Americana', 'Rua Oscar Freire, 789 - São Paulo', '@burgerhouse', 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800'),
+  ('Taco Loco', 'Comida de rua mexicana no seu melhor', 'Mexicana', 'Vila Madalena, 321 - São Paulo', '@tacoloco', 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800');
 
 INSERT INTO deals (restaurant_id, title, description, discount_percentage, max_people, available_spots, valid_from, valid_until, days_available) VALUES
-  ((SELECT id FROM restaurants WHERE name = 'Bella Italia'), '50% OFF Pizza Night', 'Get 50% off on all pizzas every Tuesday and Thursday', 50, 4, 20, CURRENT_DATE, CURRENT_DATE + INTERVAL '3 months', ARRAY['tuesday', 'thursday']),
-  ((SELECT id FROM restaurants WHERE name = 'Sushi Master'), 'Sushi Combo for 2', 'Special combo with 40 pieces + 2 drinks', 30, 2, 15, CURRENT_DATE, CURRENT_DATE + INTERVAL '2 months', ARRAY['monday', 'wednesday', 'friday']),
-  ((SELECT id FROM restaurants WHERE name = 'Burger House'), 'Buy 1 Get 1 Free', 'Buy one gourmet burger and get another free!', 50, 2, 30, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month', ARRAY['monday', 'tuesday', 'wednesday', 'thursday', 'friday']),
-  ((SELECT id FROM restaurants WHERE name = 'Taco Loco'), 'Taco Tuesday', '3 tacos + drink for a special price', 40, 4, 25, CURRENT_DATE, CURRENT_DATE + INTERVAL '3 months', ARRAY['tuesday']),
-  ((SELECT id FROM restaurants WHERE name = 'Bella Italia'), 'Weekend Brunch Special', 'All-you-can-eat brunch on weekends', 35, 6, 12, CURRENT_DATE, CURRENT_DATE + INTERVAL '2 months', ARRAY['saturday', 'sunday']);
+  ((SELECT id FROM restaurants WHERE name = 'Bella Italia'), 'Noite da Pizza com 50% OFF', 'Ganhe 50% de desconto em todas as pizzas às terças e quintas', 50, 4, 20, CURRENT_DATE, CURRENT_DATE + INTERVAL '3 months', ARRAY['tuesday', 'thursday']),
+  ((SELECT id FROM restaurants WHERE name = 'Sushi Master'), 'Combo de Sushi para 2', 'Combo especial com 40 peças + 2 bebidas', 30, 2, 15, CURRENT_DATE, CURRENT_DATE + INTERVAL '2 months', ARRAY['monday', 'wednesday', 'friday']),
+  ((SELECT id FROM restaurants WHERE name = 'Burger House'), 'Compre 1 e Leve 2 Hambúrgueres', 'Compre um hambúrguer gourmet e ganhe outro grátis', 50, 2, 30, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month', ARRAY['monday', 'tuesday', 'wednesday', 'thursday', 'friday']),
+  ((SELECT id FROM restaurants WHERE name = 'Taco Loco'), 'Especial de Taco na Terça', '3 tacos + bebida por um preço especial', 40, 4, 25, CURRENT_DATE, CURRENT_DATE + INTERVAL '3 months', ARRAY['tuesday']),
+  ((SELECT id FROM restaurants WHERE name = 'Bella Italia'), 'Brunch de Fim de Semana', 'Brunch à vontade aos fins de semana', 35, 6, 12, CURRENT_DATE, CURRENT_DATE + INTERVAL '2 months', ARRAY['saturday', 'sunday']);

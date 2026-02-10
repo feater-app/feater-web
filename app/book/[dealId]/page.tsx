@@ -1,16 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
 import { getMockDeal } from "@/lib/mock-data";
+import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { notFound } from "next/navigation";
 import BookingForm from "@/components/BookingForm";
 
-const isMockMode = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+const isMockMode = !hasSupabaseEnv;
 
 interface BookingPageProps {
   params: Promise<{ dealId: string }>;
+  searchParams: Promise<{ error?: string }>;
 }
 
-export default async function BookingPage({ params }: BookingPageProps) {
+const errorMessages: Record<string, string> = {
+  no_spots: "Não há vagas disponíveis para esta oferta no momento.",
+  invalid_party_size: "A quantidade de pessoas selecionada não é válida para esta oferta.",
+  deal_not_found: "Esta oferta não está mais disponível.",
+  failed: "Não foi possível concluir sua reserva. Tente novamente.",
+};
+
+export default async function BookingPage({ params, searchParams }: BookingPageProps) {
   const { dealId } = await params;
+  const { error } = await searchParams;
 
   let deal: any = null;
 
@@ -40,7 +50,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </a>
-          <h1 className="text-xl font-bold">Complete Your Booking</h1>
+          <h1 className="text-xl font-bold">Concluir reserva</h1>
         </div>
       </header>
 
@@ -71,6 +81,11 @@ export default async function BookingPage({ params }: BookingPageProps) {
         </div>
 
         {/* Booking Form */}
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessages[error] ?? errorMessages.failed}
+          </div>
+        )}
         <BookingForm deal={deal} isMockMode={isMockMode} />
       </main>
     </div>
