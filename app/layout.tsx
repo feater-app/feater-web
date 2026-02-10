@@ -9,8 +9,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Feater - Descubra ofertas incríveis em restaurantes",
-  description: "Encontre e reserve ofertas exclusivas de restaurantes perto de você",
+  title: "Feater - Permutas entre creators e restaurantes",
+  description: "Conecte-se a restaurantes e feche permutas com entregas de conteudo para Instagram e TikTok",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
