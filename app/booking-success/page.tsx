@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
+import AuthNav from "@/components/AuthNav";
 
 interface SuccessPageProps {
   searchParams: Promise<{
@@ -56,8 +57,9 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
   return (
     <div className="app-shell">
       <header className="top-nav">
-        <div className="nav-inner justify-center">
+        <div className="nav-inner">
           <BrandLogo priority />
+          <AuthNav />
         </div>
       </header>
 

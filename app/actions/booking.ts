@@ -46,9 +46,13 @@ export async function createBooking(formData: FormData) {
 
   // Real Supabase mode (atomic DB function)
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: bookingId, error } = await supabase.rpc("create_booking_with_spot", {
     p_deal_id: dealId,
+    p_user_id: user?.id ?? null,
     p_user_name: name,
     p_user_email: email,
     p_user_phone: phone,
