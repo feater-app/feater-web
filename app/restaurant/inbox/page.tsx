@@ -41,6 +41,19 @@ export default async function RestaurantInboxPage({ searchParams }: InboxPagePro
     bookings = data ?? [];
   }
 
+  const creatorIds = Array.from(new Set(bookings.map((booking) => booking.user_id).filter(Boolean)));
+  let socialByUser = new Map<string, any>();
+
+  if (creatorIds.length > 0) {
+    const { data: socials } = await supabase
+      .from("creator_social_accounts")
+      .select("user_id, provider, username, connected")
+      .eq("provider", "instagram")
+      .in("user_id", creatorIds);
+
+    socialByUser = new Map((socials ?? []).map((item) => [item.user_id, item]));
+  }
+
   return (
     <div className="app-shell">
       <header className="top-nav">
@@ -79,6 +92,12 @@ export default async function RestaurantInboxPage({ searchParams }: InboxPagePro
                 </div>
 
                 {booking.notes && <p className="text-sm text-slate-600">{booking.notes}</p>}
+
+                {booking.user_id && (
+                  <p className="text-xs text-slate-500">
+                    Instagram: {socialByUser.get(booking.user_id)?.connected ? `conectado${socialByUser.get(booking.user_id)?.username ? ` (@${socialByUser.get(booking.user_id).username.replace("@", "")})` : ""}` : "nao conectado"}
+                  </p>
+                )}
 
                 <div className="flex flex-wrap items-center gap-2">
                   <Link href={`/deal/${booking.deal?.id}`} className="btn-secondary">

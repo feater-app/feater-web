@@ -21,8 +21,21 @@ export default async function AuthNav() {
     );
   }
 
+  const { data: social } = await supabase
+    .from("creator_social_accounts")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("provider", "instagram")
+    .eq("connected", true)
+    .maybeSingle();
+
   return (
     <div className="flex items-center gap-2">
+      {!social && (
+        <Link href="/onboarding" className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+          Conectar IG
+        </Link>
+      )}
       <Link href="/dashboard" className="rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-semibold text-primary">
         Minhas
       </Link>

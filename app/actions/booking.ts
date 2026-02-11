@@ -50,9 +50,25 @@ export async function createBooking(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(`/book/${dealId}`)}`);
+  }
+
+  const { data: social } = await supabase
+    .from("creator_social_accounts")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("provider", "instagram")
+    .eq("connected", true)
+    .maybeSingle();
+
+  if (!social) {
+    redirect(`/onboarding?next=${encodeURIComponent(`/book/${dealId}`)}`);
+  }
+
   const { data: bookingId, error } = await supabase.rpc("create_booking_with_spot", {
     p_deal_id: dealId,
-    p_user_id: user?.id ?? null,
+    p_user_id: user.id,
     p_user_name: name,
     p_user_email: email,
     p_user_phone: phone,

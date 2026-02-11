@@ -10,6 +10,8 @@ DROP FUNCTION IF EXISTS create_booking_with_spot(UUID, TEXT, TEXT, TEXT, INTEGER
 DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS deals CASCADE;
 DROP TABLE IF EXISTS restaurants CASCADE;
+DROP TABLE IF EXISTS creator_social_accounts CASCADE;
+DROP TABLE IF EXISTS creator_profiles CASCADE;
 
 -- Tabela de restaurantes
 CREATE TABLE restaurants (
@@ -61,17 +63,45 @@ CREATE TABLE bookings (
   notes TEXT
 );
 
+-- Perfil de creator
+CREATE TABLE creator_profiles (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  niche TEXT,
+  city TEXT,
+  audience_range TEXT,
+  bio TEXT,
+  onboarding_step INTEGER DEFAULT 1
+);
+
+-- Redes sociais conectadas do creator
+CREATE TABLE creator_social_accounts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  provider TEXT NOT NULL CHECK (provider IN ('instagram', 'tiktok')),
+  provider_user_id TEXT,
+  username TEXT,
+  connected BOOLEAN DEFAULT true,
+  last_sync_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  UNIQUE(user_id, provider)
+);
+
 -- Indices para melhorar performance de consultas
 CREATE INDEX idx_deals_restaurant_id ON deals(restaurant_id);
 CREATE INDEX idx_deals_active ON deals(active);
 CREATE INDEX idx_bookings_deal_id ON bookings(deal_id);
 CREATE INDEX idx_bookings_user_id ON bookings(user_id);
 CREATE INDEX idx_bookings_status ON bookings(status);
+CREATE INDEX idx_creator_social_accounts_user_id ON creator_social_accounts(user_id);
 
 -- Politicas de Row Level Security (RLS)
 ALTER TABLE restaurants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE deals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE creator_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE creator_social_accounts ENABLE ROW LEVEL SECURITY;
 
 -- Restaurantes: todos podem ler, apenas donos podem modificar
 CREATE POLICY "Restaurantes visiveis por todos"
@@ -127,6 +157,37 @@ CREATE POLICY "Donos de restaurante atualizam status das reservas"
       WHERE r.user_id = auth.uid()
     )
   );
+
+-- Creator profiles: usuario gerencia o proprio perfil
+CREATE POLICY "Creator visualiza proprio perfil"
+  ON creator_profiles FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Creator insere proprio perfil"
+  ON creator_profiles FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Creator atualiza proprio perfil"
+  ON creator_profiles FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Social accounts: creator gerencia as proprias conexoes
+CREATE POLICY "Creator visualiza proprias redes"
+  ON creator_social_accounts FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Creator insere proprias redes"
+  ON creator_social_accounts FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Creator atualiza proprias redes"
+  ON creator_social_accounts FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Restaurantes podem consultar se creator esta conectado (sem token sensivel)
+CREATE POLICY "Redes sociais visiveis para leitura"
+  ON creator_social_accounts FOR SELECT
+  USING (true);
 
 -- Criacao atomica de reserva (insere reserva + decrementa vagas)
 CREATE OR REPLACE FUNCTION create_booking_with_spot(

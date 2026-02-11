@@ -24,6 +24,14 @@ export default async function DashboardPage() {
 
   await supabase.from("bookings").update({ user_id: user.id }).eq("user_email", user.email ?? "").is("user_id", null);
 
+  const [{ data: profile }, { data: social }] = await Promise.all([
+    supabase.from("creator_profiles").select("niche, city, audience_range").eq("user_id", user.id).maybeSingle(),
+    supabase.from("creator_social_accounts").select("id, username, connected").eq("user_id", user.id).eq("provider", "instagram").maybeSingle(),
+  ]);
+
+  const profileDone = Boolean(profile?.niche && profile?.city && profile?.audience_range);
+  const instagramConnected = Boolean(social?.connected);
+
   const { data: bookings } = await supabase
     .from("bookings")
     .select("id, status, booking_date, created_at, deal:deals(id, title, restaurant:restaurants(name))")
@@ -57,6 +65,18 @@ export default async function DashboardPage() {
               <p className="text-xs text-slate-500">Aprovadas</p>
               <p className="mt-1 text-2xl font-semibold text-primary">{approved}</p>
             </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-primary/10 bg-primary/[0.05] p-3 text-sm">
+            <p className="font-semibold text-primary">Status do onboarding</p>
+            <p className="mt-1 text-slate-600">Perfil: {profileDone ? "concluido" : "pendente"}</p>
+            <p className="text-slate-600">Instagram: {instagramConnected ? `conectado${social?.username ? ` (@${social.username.replace("@", "")})` : ""}` : "pendente"}</p>
+
+            {(!profileDone || !instagramConnected) && (
+              <Link href="/onboarding" className="mt-2 inline-flex text-xs font-semibold text-primary underline-offset-4 hover:underline">
+                Finalizar onboarding
+              </Link>
+            )}
           </div>
         </section>
 
