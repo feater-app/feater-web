@@ -5,6 +5,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Reset completo (script unico)
+DROP FUNCTION IF EXISTS create_booking_with_spot(UUID, UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT);
 DROP FUNCTION IF EXISTS create_booking_with_spot(UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT);
 DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS deals CASCADE;
@@ -117,9 +118,20 @@ CREATE POLICY "Donos de restaurante visualizam reservas das ofertas"
     )
   );
 
+CREATE POLICY "Donos de restaurante atualizam status das reservas"
+  ON bookings FOR UPDATE
+  USING (
+    deal_id IN (
+      SELECT d.id FROM deals d
+      JOIN restaurants r ON d.restaurant_id = r.id
+      WHERE r.user_id = auth.uid()
+    )
+  );
+
 -- Criacao atomica de reserva (insere reserva + decrementa vagas)
 CREATE OR REPLACE FUNCTION create_booking_with_spot(
   p_deal_id UUID,
+  p_user_id UUID,
   p_user_name TEXT,
   p_user_email TEXT,
   p_user_phone TEXT,
@@ -158,6 +170,7 @@ BEGIN
 
   INSERT INTO bookings (
     deal_id,
+    user_id,
     user_name,
     user_email,
     user_phone,
@@ -168,6 +181,7 @@ BEGIN
   )
   VALUES (
     p_deal_id,
+    p_user_id,
     p_user_name,
     p_user_email,
     p_user_phone,
@@ -182,8 +196,8 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION create_booking_with_spot(UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_booking_with_spot(UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT) TO anon, authenticated;
+REVOKE ALL ON FUNCTION create_booking_with_spot(UUID, UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_booking_with_spot(UUID, UUID, TEXT, TEXT, TEXT, INTEGER, DATE, TEXT) TO anon, authenticated;
 
 -- Dados de exemplo para testes
 INSERT INTO restaurants (name, description, category, address, instagram_handle, image_url) VALUES

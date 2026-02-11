@@ -7,6 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BrandLogo from "@/components/BrandLogo";
+import AuthNav from "@/components/AuthNav";
+import RealtimeDealsSync from "@/components/RealtimeDealsSync";
 
 export const revalidate = 60;
 
@@ -73,13 +75,17 @@ export default async function DealPage({ params }: DealPageProps) {
 
   return (
     <div className="app-shell pb-24">
+      <RealtimeDealsSync dealId={deal.id} />
       <header className="top-nav">
         <div className="nav-inner">
           <Link href="/" className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary">
             <span aria-hidden>←</span>
             Voltar
           </Link>
-          <BrandLogo priority />
+          <div className="flex items-center gap-3">
+            <BrandLogo priority />
+            <AuthNav />
+          </div>
         </div>
       </header>
 

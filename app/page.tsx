@@ -7,6 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import FeedFilters from "@/components/FeedFilters";
 import BrandLogo from "@/components/BrandLogo";
+import AuthNav from "@/components/AuthNav";
+import RealtimeDealsSync from "@/components/RealtimeDealsSync";
 
 export const revalidate = 60;
 
@@ -146,12 +148,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div className="app-shell">
+      <RealtimeDealsSync />
       <header className="top-nav">
         <div className="nav-inner">
           <BrandLogo priority />
-          <span className="rounded-full border border-primary/15 bg-white px-3 py-1 text-[11px] font-semibold text-primary">
-            Sao Paulo
-          </span>
+          <AuthNav />
         </div>
       </header>
 

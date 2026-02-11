@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import BookingForm from "@/components/BookingForm";
 import BrandLogo from "@/components/BrandLogo";
+import AuthNav from "@/components/AuthNav";
 
 const isMockMode = !hasSupabaseEnv;
 
@@ -55,7 +56,10 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
             <span aria-hidden>←</span>
             Oferta
           </Link>
-          <BrandLogo priority />
+          <div className="flex items-center gap-3">
+            <BrandLogo priority />
+            <AuthNav />
+          </div>
         </div>
       </header>
 
