@@ -5,17 +5,54 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
+import FeedFilters from "@/components/FeedFilters";
 
 export const revalidate = 60;
 
 const isMockMode = !hasSupabaseEnv;
 
-const quickFilters = ["Feed IG", "Stories", "TikTok", "10k+", "Jantar"];
+type Platform = "" | "instagram" | "tiktok";
+type SortBy = "newest" | "followers" | "spots" | "ending_soon";
+
+interface HomePageProps {
+  searchParams: Promise<{
+    q?: string;
+    platform?: string;
+    followers?: string;
+    day?: string;
+    sort?: string;
+  }>;
+}
+
+interface Filters {
+  q: string;
+  platform: Platform;
+  followers: number | null;
+  day: string;
+  sort: SortBy;
+}
 
 function formatFollowers(value: number | null | undefined) {
   if (!value || value <= 0) return null;
   if (value >= 1000) return `${Math.round(value / 1000)}k`;
   return `${value}`;
+}
+
+function parseFilters(raw: { q?: string; platform?: string; followers?: string; day?: string; sort?: string }): Filters {
+  const parsedFollowers = raw.followers ? Number(raw.followers) : NaN;
+  const platform: Platform = raw.platform === "instagram" || raw.platform === "tiktok" ? raw.platform : "";
+  const sort: SortBy =
+    raw.sort === "followers" || raw.sort === "spots" || raw.sort === "ending_soon" || raw.sort === "newest"
+      ? raw.sort
+      : "newest";
+
+  return {
+    q: (raw.q || "").trim(),
+    platform,
+    followers: Number.isFinite(parsedFollowers) && parsedFollowers > 0 ? parsedFollowers : null,
+    day: raw.day || "",
+    sort,
+  };
 }
 
 function getDealRequirements(deal: any) {
@@ -34,14 +71,54 @@ function getDealRequirements(deal: any) {
     minFollowers,
     reward: deal.permuta_reward || "Experiencia da casa para creators",
     deliverables: deliverables.length > 0 ? deliverables.join(" + ") : "Briefing alinhado com o restaurante",
+    hasInstagram: feedPosts > 0 || stories > 0,
+    hasTikTok: tiktokPosts > 0,
   };
 }
 
-export default async function HomePage() {
-  let deals: any[] = [];
+function dealMatchesFilters(deal: any, filters: Filters) {
+  const requirements = getDealRequirements(deal);
+
+  if (filters.platform === "instagram" && !requirements.hasInstagram) return false;
+  if (filters.platform === "tiktok" && !requirements.hasTikTok) return false;
+  if (filters.followers && (deal.min_followers ?? 0) < filters.followers) return false;
+  if (filters.day && !(deal.days_available || []).includes(filters.day)) return false;
+
+  if (filters.q) {
+    const q = filters.q.toLowerCase();
+    const haystack = [
+      deal.title,
+      deal.description,
+      deal.permuta_reward,
+      deal.restaurant?.name,
+      deal.restaurant?.category,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    if (!haystack.includes(q)) return false;
+  }
+
+  return true;
+}
+
+function sortDeals(deals: any[], sort: SortBy) {
+  const list = [...deals];
+
+  if (sort === "followers") return list.sort((a, b) => (b.min_followers ?? 0) - (a.min_followers ?? 0));
+  if (sort === "spots") return list.sort((a, b) => (b.available_spots ?? 0) - (a.available_spots ?? 0));
+  if (sort === "ending_soon") return list.sort((a, b) => new Date(a.valid_until).getTime() - new Date(b.valid_until).getTime());
+
+  return list.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const filters = parseFilters(await searchParams);
+  let allDeals: any[] = [];
 
   if (isMockMode) {
-    deals = mockDeals;
+    allDeals = mockDeals;
   } else {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -59,8 +136,12 @@ export default async function HomePage() {
       .order("created_at", { ascending: false });
 
     if (error) console.error("Error fetching deals:", error);
-    deals = data ?? [];
+    allDeals = data ?? [];
   }
+
+  const filtered = allDeals.filter((deal) => dealMatchesFilters(deal, filters));
+  const deals = sortDeals(filtered, filters.sort);
+  const hasActiveFilters = Boolean(filters.q || filters.platform || filters.followers || filters.day);
 
   return (
     <div className="app-shell">
@@ -86,26 +167,26 @@ export default async function HomePage() {
           <div className="mt-5 grid grid-cols-3 gap-2 md:max-w-xl md:gap-3">
             <div className="metric-pill">
               <p className="text-lg font-bold text-white">{deals.length}</p>
-              <p>permutas</p>
+              <p>resultados</p>
+            </div>
+            <div className="metric-pill">
+              <p className="text-lg font-bold text-white">{allDeals.length}</p>
+              <p>permutas ativas</p>
             </div>
             <div className="metric-pill">
               <p className="text-lg font-bold text-white">24h</p>
               <p>resposta media</p>
             </div>
-            <div className="metric-pill">
-              <p className="text-lg font-bold text-white">100%</p>
-              <p>creator focus</p>
-            </div>
           </div>
         </section>
 
-        <section className="chip-row" aria-label="Filtros rapidos">
-          {quickFilters.map((filter) => (
-            <button key={filter} type="button" className="chip">
-              {filter}
-            </button>
-          ))}
-        </section>
+        <FeedFilters
+          initialQuery={filters.q}
+          initialPlatform={filters.platform}
+          initialFollowers={filters.followers}
+          initialDay={filters.day}
+          initialSort={filters.sort}
+        />
 
         {deals.length > 0 ? (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -114,54 +195,61 @@ export default async function HomePage() {
 
               return (
                 <Link key={deal.id} href={`/deal/${deal.id}`} className="deal-card group">
-                <div className="deal-image-wrap">
-                  <Image
-                    src={deal.image_url || deal.restaurant.image_url || "/placeholder.jpg"}
-                    alt={deal.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    unoptimized
-                  />
-                  <div className="deal-image-overlay" />
+                  <div className="deal-image-wrap">
+                    <Image
+                      src={deal.image_url || deal.restaurant.image_url || "/placeholder.jpg"}
+                      alt={deal.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      unoptimized
+                    />
+                    <div className="deal-image-overlay" />
 
-                  <div className="absolute left-3 top-3 badge-discount">
-                    {formatFollowers(requirements.minFollowers)
-                      ? `${formatFollowers(requirements.minFollowers)}+ seguidores`
-                      : "Sem minimo de seguidores"}
+                    <div className="absolute left-3 top-3 badge-discount">
+                      {formatFollowers(requirements.minFollowers)
+                        ? `${formatFollowers(requirements.minFollowers)}+ seguidores`
+                        : "Sem minimo de seguidores"}
+                    </div>
+
+                    <div className="absolute bottom-3 left-3 right-3 text-white">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
+                        {deal.restaurant.category}
+                      </p>
+                      <h2 className="mt-1 line-clamp-1 text-lg font-semibold">{deal.title}</h2>
+                      <p className="line-clamp-1 text-sm text-white/85">{deal.restaurant.name}</p>
+                    </div>
                   </div>
 
-                  <div className="absolute bottom-3 left-3 right-3 text-white">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
-                      {deal.restaurant.category}
-                    </p>
-                    <h2 className="mt-1 line-clamp-1 text-lg font-semibold">{deal.title}</h2>
-                    <p className="line-clamp-1 text-sm text-white/85">{deal.restaurant.name}</p>
+                  <div className="space-y-4 p-4">
+                    <p className="line-clamp-2 text-sm text-slate-600">{deal.description || "Permuta por tempo limitado"}</p>
+
+                    <div className="rounded-2xl border border-primary/10 bg-primary/[0.04] px-3 py-2 text-xs text-slate-600">
+                      <p className="font-semibold text-primary">Em troca: {requirements.reward}</p>
+                      <p className="mt-1 text-slate-500">Entrega: {requirements.deliverables}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                      <span>{deal.available_spots} vagas para creators</span>
+                      <span>Ate {format(new Date(deal.valid_until), "dd MMM", { locale: ptBR })}</span>
+                    </div>
+
+                    <span className="btn-primary w-full">Quero dar feat</span>
                   </div>
-                </div>
-
-                <div className="space-y-4 p-4">
-                  <p className="line-clamp-2 text-sm text-slate-600">{deal.description || "Permuta por tempo limitado"}</p>
-
-                  <div className="rounded-2xl border border-primary/10 bg-primary/[0.04] px-3 py-2 text-xs text-slate-600">
-                    <p className="font-semibold text-primary">Em troca: {requirements.reward}</p>
-                    <p className="mt-1 text-slate-500">Entrega: {requirements.deliverables}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                    <span>{deal.available_spots} vagas para creators</span>
-                    <span>Ate {format(new Date(deal.valid_until), "dd MMM", { locale: ptBR })}</span>
-                  </div>
-
-                  <span className="btn-primary w-full">Quero dar feat</span>
-                </div>
                 </Link>
               );
             })}
           </section>
         ) : (
           <section className="card px-6 py-12 text-center">
-            <p className="text-base font-semibold text-slate-700">Nenhuma permuta disponivel no momento</p>
-            <p className="mt-2 text-sm text-slate-500">Volte em breve para novas oportunidades.</p>
+            <p className="text-base font-semibold text-slate-700">Nenhuma permuta encontrada</p>
+            <p className="mt-2 text-sm text-slate-500">Ajuste os filtros para explorar mais oportunidades.</p>
+            {hasActiveFilters && (
+              <div className="mt-4">
+                <Link href="/" className="btn-secondary">
+                  Limpar filtros
+                </Link>
+              </div>
+            )}
           </section>
         )}
       </main>
