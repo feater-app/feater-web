@@ -3,6 +3,27 @@
 import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+type Platform = "" | "instagram" | "tiktok";
+type SortBy = "newest" | "followers" | "spots" | "ending_soon";
+
+interface FeedFiltersProps {
+  initialQuery: string;
+  initialPlatform: Platform;
+  initialFollowers: number | null;
+  initialDay: string;
+  initialSort: SortBy;
+}
+
+interface FilterUpdates {
+  q?: string | null;
+  platform?: Platform;
+  followers?: number | null;
+  day?: string;
+  sort?: SortBy;
+}
+
+const RECENT_SEARCHES_KEY = "feater_recent_searches";
+
 const platformOptions = [
   { label: "Instagram", value: "instagram" },
   { label: "TikTok", value: "tiktok" },
@@ -17,37 +38,43 @@ const dayOptions = [
   { label: "Dom", value: "sunday" },
 ] as const;
 
-interface FeedFiltersProps {
-  initialQuery: string;
-  initialPlatform: "instagram" | "tiktok" | "";
-  initialFollowers: number | null;
-  initialDay: string;
-}
+const sortOptions: Array<{ label: string; value: SortBy }> = [
+  { label: "Mais recentes", value: "newest" },
+  { label: "Maior minimo", value: "followers" },
+  { label: "Mais vagas", value: "spots" },
+  { label: "Expira antes", value: "ending_soon" },
+];
 
-interface FilterUpdates {
-  q?: string | null;
-  platform?: "instagram" | "tiktok" | "";
-  followers?: number | null;
-  day?: string;
-}
-
-export default function FeedFilters({ initialQuery, initialPlatform, initialFollowers, initialDay }: FeedFiltersProps) {
+export default function FeedFilters({
+  initialQuery,
+  initialPlatform,
+  initialFollowers,
+  initialDay,
+  initialSort,
+}: FeedFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
   const [query, setQuery] = useState(initialQuery);
-  const [expanded, setExpanded] = useState(Boolean(initialPlatform || initialFollowers || initialDay));
+  const [isPending, startTransition] = useTransition();
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
 
   useEffect(() => {
-    if (initialPlatform || initialFollowers || initialDay) {
-      setExpanded(true);
+    try {
+      const saved = window.localStorage.getItem(RECENT_SEARCHES_KEY);
+      if (!saved) return;
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        setRecentSearches(parsed.filter((item) => typeof item === "string").slice(0, 5));
+      }
+    } catch {
+      setRecentSearches([]);
     }
-  }, [initialDay, initialFollowers, initialPlatform]);
+  }, []);
 
   const activeCount = useMemo(() => {
     let count = 0;
@@ -81,8 +108,12 @@ export default function FeedFilters({ initialQuery, initialPlatform, initialFoll
       else params.delete("day");
     }
 
-    const next = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    if (updates.sort !== undefined) {
+      if (updates.sort === "newest") params.delete("sort");
+      else params.set("sort", updates.sort);
+    }
 
+    const next = params.toString() ? `${pathname}?${params.toString()}` : pathname;
     startTransition(() => {
       router.replace(next, { scroll: false });
     });
@@ -90,112 +121,147 @@ export default function FeedFilters({ initialQuery, initialPlatform, initialFoll
 
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
-    applyFilters({ q: query.trim() || null });
+    const cleaned = query.trim();
+
+    if (cleaned) {
+      const nextRecents = [cleaned, ...recentSearches.filter((item) => item.toLowerCase() !== cleaned.toLowerCase())].slice(0, 5);
+      setRecentSearches(nextRecents);
+      window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(nextRecents));
+    }
+
+    applyFilters({ q: cleaned || null });
   };
 
   return (
-    <section className="filter-shell space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <section className="card space-y-4 p-4 md:p-5">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm font-semibold text-slate-900">Buscar permutas</p>
-          <p className="text-xs text-slate-500">Filtro instantaneo sem recarregar a pagina</p>
+          <p className="text-sm font-semibold text-slate-900">Filtrar permutas</p>
+          <p className="text-xs text-slate-500">Atualizacao em tempo real sem recarregar a pagina</p>
         </div>
 
-        <button type="button" className="filter-toggle" onClick={() => setExpanded((prev) => !prev)}>
-          {expanded ? "Ocultar filtros" : "Mostrar filtros"}
-        </button>
+        <label className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+          Ordenacao
+          <select
+            value={initialSort}
+            onChange={(event) => applyFilters({ sort: event.target.value as SortBy })}
+            className="input mt-2 py-2"
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
-      <form onSubmit={submitSearch} className="flex flex-col gap-3 sm:flex-row">
+      <form onSubmit={submitSearch} className="flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
+          className="input"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          className="input"
-          placeholder="Restaurante, nicho ou recompensa"
+          placeholder="Restaurante, nicho, recompensa"
         />
         <button type="submit" className="btn-primary sm:w-auto" disabled={isPending}>
           {isPending ? "Atualizando..." : "Buscar"}
         </button>
       </form>
 
+      {recentSearches.length > 0 && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Buscas recentes</p>
+          <div className="flex flex-wrap gap-2">
+            {recentSearches.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className="chip"
+                onClick={() => {
+                  setQuery(item);
+                  applyFilters({ q: item });
+                }}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Plataforma</p>
+          <div className="flex flex-wrap gap-2">
+            {platformOptions.map((option) => {
+              const selected = initialPlatform === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`chip ${selected ? "!border-primary !bg-primary !text-white" : ""}`}
+                  onClick={() => applyFilters({ platform: selected ? "" : option.value })}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Seguidores</p>
+          <div className="flex flex-wrap gap-2">
+            {followersOptions.map((followers) => {
+              const selected = initialFollowers === followers;
+              return (
+                <button
+                  key={followers}
+                  type="button"
+                  className={`chip ${selected ? "!border-primary !bg-primary !text-white" : ""}`}
+                  onClick={() => applyFilters({ followers: selected ? null : followers })}
+                >
+                  {followers / 1000}k+
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Dia</p>
+          <div className="flex flex-wrap gap-2">
+            {dayOptions.map((option) => {
+              const selected = initialDay === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`chip ${selected ? "!border-primary !bg-primary !text-white" : ""}`}
+                  onClick={() => applyFilters({ day: selected ? "" : option.value })}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {activeCount > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="filter-chip filter-chip-active">{activeCount} filtros ativos</span>
-          {initialPlatform && <span className="filter-chip">{initialPlatform === "instagram" ? "Instagram" : "TikTok"}</span>}
-          {initialFollowers && <span className="filter-chip">{initialFollowers / 1000}k+ seguidores</span>}
-          {initialDay && <span className="filter-chip">{dayOptions.find((day) => day.value === initialDay)?.label || initialDay}</span>}
+        <div className="flex items-center justify-between gap-2 rounded-2xl border border-primary/10 bg-primary/[0.05] px-3 py-2 text-xs">
+          <span className="font-semibold text-primary">{activeCount} filtro(s) ativo(s)</span>
           <button
             type="button"
             onClick={() => {
               setQuery("");
-              applyFilters({ q: null, platform: "", followers: null, day: "" });
+              applyFilters({ q: null, platform: "", followers: null, day: "", sort: "newest" });
             }}
-            className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
           >
-            Limpar tudo
+            Limpar filtros
           </button>
-        </div>
-      )}
-
-      {expanded && (
-        <div className="space-y-4 border-t border-slate-100 pt-4">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Plataforma</p>
-            <div className="grid grid-cols-2 gap-2">
-              {platformOptions.map((option) => {
-                const selected = initialPlatform === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`chip w-full justify-center ${selected ? "!border-primary !bg-primary !text-white" : ""}`}
-                    onClick={() => applyFilters({ platform: selected ? "" : option.value })}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Minimo de seguidores</p>
-            <div className="grid grid-cols-3 gap-2">
-              {followersOptions.map((followers) => {
-                const selected = initialFollowers === followers;
-                return (
-                  <button
-                    key={followers}
-                    type="button"
-                    className={`chip w-full justify-center ${selected ? "!border-primary !bg-primary !text-white" : ""}`}
-                    onClick={() => applyFilters({ followers: selected ? null : followers })}
-                  >
-                    {followers / 1000}k+
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Dia de disponibilidade</p>
-            <div className="grid grid-cols-4 gap-2">
-              {dayOptions.map((option) => {
-                const selected = initialDay === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`chip w-full justify-center px-2 ${selected ? "!border-primary !bg-primary !text-white" : ""}`}
-                    onClick={() => applyFilters({ day: selected ? "" : option.value })}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       )}
     </section>

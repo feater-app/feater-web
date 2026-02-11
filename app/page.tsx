@@ -12,26 +12,48 @@ export const revalidate = 60;
 
 const isMockMode = !hasSupabaseEnv;
 
+type Platform = "" | "instagram" | "tiktok";
+type SortBy = "newest" | "followers" | "spots" | "ending_soon";
+
 interface HomePageProps {
   searchParams: Promise<{
     q?: string;
     platform?: string;
     followers?: string;
     day?: string;
+    sort?: string;
   }>;
 }
 
 interface Filters {
   q: string;
-  platform: "instagram" | "tiktok" | "";
+  platform: Platform;
   followers: number | null;
   day: string;
+  sort: SortBy;
 }
 
 function formatFollowers(value: number | null | undefined) {
   if (!value || value <= 0) return null;
   if (value >= 1000) return `${Math.round(value / 1000)}k`;
   return `${value}`;
+}
+
+function parseFilters(raw: { q?: string; platform?: string; followers?: string; day?: string; sort?: string }): Filters {
+  const parsedFollowers = raw.followers ? Number(raw.followers) : NaN;
+  const platform: Platform = raw.platform === "instagram" || raw.platform === "tiktok" ? raw.platform : "";
+  const sort: SortBy =
+    raw.sort === "followers" || raw.sort === "spots" || raw.sort === "ending_soon" || raw.sort === "newest"
+      ? raw.sort
+      : "newest";
+
+  return {
+    q: (raw.q || "").trim(),
+    platform,
+    followers: Number.isFinite(parsedFollowers) && parsedFollowers > 0 ? parsedFollowers : null,
+    day: raw.day || "",
+    sort,
+  };
 }
 
 function getDealRequirements(deal: any) {
@@ -52,18 +74,6 @@ function getDealRequirements(deal: any) {
     deliverables: deliverables.length > 0 ? deliverables.join(" + ") : "Briefing alinhado com o restaurante",
     hasInstagram: feedPosts > 0 || stories > 0,
     hasTikTok: tiktokPosts > 0,
-  };
-}
-
-function parseFilters(raw: { q?: string; platform?: string; followers?: string; day?: string }): Filters {
-  const parsedFollowers = raw.followers ? Number(raw.followers) : NaN;
-  const platform = raw.platform === "instagram" || raw.platform === "tiktok" ? raw.platform : "";
-
-  return {
-    q: (raw.q || "").trim(),
-    platform,
-    followers: Number.isFinite(parsedFollowers) && parsedFollowers > 0 ? parsedFollowers : null,
-    day: raw.day || "",
   };
 }
 
@@ -94,6 +104,16 @@ function dealMatchesFilters(deal: any, filters: Filters) {
   return true;
 }
 
+function sortDeals(deals: any[], sort: SortBy) {
+  const list = [...deals];
+
+  if (sort === "followers") return list.sort((a, b) => (b.min_followers ?? 0) - (a.min_followers ?? 0));
+  if (sort === "spots") return list.sort((a, b) => (b.available_spots ?? 0) - (a.available_spots ?? 0));
+  if (sort === "ending_soon") return list.sort((a, b) => new Date(a.valid_until).getTime() - new Date(b.valid_until).getTime());
+
+  return list.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+}
+
 export default async function HomePage({ searchParams }: HomePageProps) {
   const filters = parseFilters(await searchParams);
   let allDeals: any[] = [];
@@ -120,7 +140,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     allDeals = data ?? [];
   }
 
-  const deals = allDeals.filter((deal) => dealMatchesFilters(deal, filters));
+  const filteredDeals = allDeals.filter((deal) => dealMatchesFilters(deal, filters));
+  const deals = sortDeals(filteredDeals, filters.sort);
   const hasActiveFilters = Boolean(filters.q || filters.platform || filters.followers || filters.day);
 
   return (
@@ -165,6 +186,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           initialPlatform={filters.platform}
           initialFollowers={filters.followers}
           initialDay={filters.day}
+          initialSort={filters.sort}
         />
 
         {deals.length > 0 ? (
@@ -219,7 +241,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         ) : (
           <section className="card px-6 py-12 text-center">
             <p className="text-base font-semibold text-slate-700">Nenhuma permuta encontrada</p>
-            <p className="mt-2 text-sm text-slate-500">Ajuste os filtros ou limpe a busca para ver mais oportunidades.</p>
+            <p className="mt-2 text-sm text-slate-500">Ajuste os filtros para explorar mais oportunidades.</p>
             {hasActiveFilters && (
               <div className="mt-4">
                 <Link href="/" className="btn-secondary">
