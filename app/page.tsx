@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
 import FeedFilters from "@/components/FeedFilters";
+import BrandLogo from "@/components/BrandLogo";
 
 export const revalidate = 60;
 
@@ -139,15 +140,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     allDeals = data ?? [];
   }
 
-  const filtered = allDeals.filter((deal) => dealMatchesFilters(deal, filters));
-  const deals = sortDeals(filtered, filters.sort);
+  const filteredDeals = allDeals.filter((deal) => dealMatchesFilters(deal, filters));
+  const deals = sortDeals(filteredDeals, filters.sort);
   const hasActiveFilters = Boolean(filters.q || filters.platform || filters.followers || filters.day);
 
   return (
     <div className="app-shell">
       <header className="top-nav">
         <div className="nav-inner">
-          <Image src="/logo-feater-mark.png" alt="Feater" width={56} height={56} className="brand-logo" priority />
+          <BrandLogo priority />
           <span className="rounded-full border border-primary/15 bg-white px-3 py-1 text-[11px] font-semibold text-primary">
             Sao Paulo
           </span>
@@ -212,9 +213,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                     </div>
 
                     <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">
-                        {deal.restaurant.category}
-                      </p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/80">{deal.restaurant.category}</p>
                       <h2 className="mt-1 line-clamp-1 text-lg font-semibold">{deal.title}</h2>
                       <p className="line-clamp-1 text-sm text-white/85">{deal.restaurant.name}</p>
                     </div>

@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Platform = "" | "instagram" | "tiktok";
 type SortBy = "newest" | "followers" | "spots" | "ending_soon";
-const RECENT_SEARCHES_KEY = "feater_recent_searches";
 
 interface FeedFiltersProps {
   initialQuery: string;
@@ -22,6 +21,8 @@ interface FilterUpdates {
   day?: string;
   sort?: SortBy;
 }
+
+const RECENT_SEARCHES_KEY = "feater_recent_searches";
 
 const platformOptions = [
   { label: "Instagram", value: "instagram" },
@@ -113,7 +114,6 @@ export default function FeedFilters({
     }
 
     const next = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-
     startTransition(() => {
       router.replace(next, { scroll: false });
     });
