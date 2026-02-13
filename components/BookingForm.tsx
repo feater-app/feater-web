@@ -1,22 +1,51 @@
 "use client";
 
 import { createBooking } from "@/app/actions/booking";
+import Link from "next/link";
+import { FormEvent, useState } from "react";
 import { useActionState } from "react";
 
 interface BookingFormProps {
   deal: any;
   isMockMode?: boolean;
+  applicant?: {
+    name: string;
+    email: string;
+    phone: string;
+  } | null;
+  isAuthenticated?: boolean;
+  isInstagramConnected?: boolean;
+  loginHref?: string;
+  connectInstagramHref?: string;
 }
 
 const today = new Date().toISOString().split("T")[0];
 
-export default function BookingForm({ deal, isMockMode = false }: BookingFormProps) {
+export default function BookingForm({
+  deal,
+  isMockMode = false,
+  applicant = null,
+  isAuthenticated = false,
+  isInstagramConnected = false,
+  loginHref = "/login",
+  connectInstagramHref = "/onboarding",
+}: BookingFormProps) {
   const [, action, pending] = useActionState(async (_: any, formData: FormData) => {
     await createBooking(formData);
   }, null);
+  const [showGateModal, setShowGateModal] = useState(false);
+
+  const requiresSocialGate = !isMockMode && (!isAuthenticated || !isInstagramConnected);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (!requiresSocialGate) return;
+    event.preventDefault();
+    setShowGateModal(true);
+  };
 
   return (
-    <form action={action} className="card space-y-5 p-5 md:p-6">
+    <>
+    <form action={action} onSubmit={handleSubmit} className="card space-y-5 p-5 md:p-6">
       {isMockMode && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           Modo demonstracao: as candidaturas nao sao salvas permanentemente sem Supabase conectado.
@@ -40,6 +69,7 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
             required
             className="input mt-2"
             placeholder="Joao da Silva"
+            defaultValue={applicant?.name || ""}
           />
         </label>
 
@@ -52,12 +82,22 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
             required
             className="input mt-2"
             placeholder="joao@email.com"
+            defaultValue={applicant?.email || ""}
+            readOnly={Boolean(applicant?.email)}
           />
+          {applicant?.email && <span className="mt-1 block text-xs font-normal text-slate-500">E-mail confirmado da sua conta.</span>}
         </label>
 
         <label htmlFor="phone" className="block text-sm font-semibold text-slate-700">
           Telefone
-          <input type="tel" id="phone" name="phone" className="input mt-2" placeholder="+55 11 99999-9999" />
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            className="input mt-2"
+            placeholder="+55 11 99999-9999"
+            defaultValue={applicant?.phone || ""}
+          />
         </label>
       </div>
 
@@ -100,12 +140,40 @@ export default function BookingForm({ deal, isMockMode = false }: BookingFormPro
 
       <div className="space-y-3 pt-1">
         <button type="submit" disabled={pending} className="btn-primary w-full">
-          {pending ? "Enviando..." : "Enviar candidatura"}
+          {pending ? "Enviando..." : "Quero me candidatar"}
         </button>
         <p className="text-center text-xs text-slate-500">
           Voce recebe confirmacao por e-mail e o restaurante retorna em ate 24 horas.
         </p>
       </div>
     </form>
+
+    {showGateModal && (
+      <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 px-4">
+        <div className="card w-full max-w-md p-5">
+          <p className="text-lg font-semibold text-slate-900">Para continuar, conecte seu Instagram</p>
+          <p className="mt-2 text-sm text-slate-600">
+            Esse passo garante confiança para o restaurante antes de enviar sua candidatura.
+          </p>
+
+          <div className="mt-4 space-y-2">
+            {isAuthenticated ? (
+              <Link href={connectInstagramHref} className="btn-primary w-full" onClick={() => setShowGateModal(false)}>
+                Conectar Instagram
+              </Link>
+            ) : (
+              <Link href={loginHref} className="btn-primary w-full" onClick={() => setShowGateModal(false)}>
+                Entrar e conectar Instagram
+              </Link>
+            )}
+
+            <button type="button" className="btn-secondary w-full" onClick={() => setShowGateModal(false)}>
+              Continuar editando
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

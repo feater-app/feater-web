@@ -51,7 +51,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   }
 
   const [{ data: profile }, { data: social }] = await Promise.all([
-    supabase.from("creator_profiles").select("niche, city, audience_range, bio").eq("user_id", user.id).maybeSingle(),
+    supabase.from("creator_profiles").select("full_name, phone, niche, city, audience_range, bio").eq("user_id", user.id).maybeSingle(),
     supabase.from("creator_social_accounts").select("id, username, connected").eq("user_id", user.id).eq("provider", "instagram").maybeSingle(),
   ]);
 
@@ -82,6 +82,11 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
 
           <form action={saveCreatorProfileAction} className="space-y-3">
             <input type="hidden" name="next" value={next} />
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <input name="fullName" defaultValue={profile?.full_name ?? ""} className="input" placeholder="Nome completo" required />
+              <input name="phone" defaultValue={profile?.phone ?? ""} className="input" placeholder="Telefone" />
+            </div>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <input name="niche" defaultValue={profile?.niche ?? ""} className="input" placeholder="Nicho (food, lifestyle, etc)" required />
@@ -125,10 +130,10 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
               Instagram conectado{social?.username ? `: @${social.username.replace("@", "")}` : ""}.
             </p>
           ) : (
-            <InstagramConnectButton nextPath={next} disabled={!profile?.niche || !profile?.city || !profile?.audience_range} />
+            <InstagramConnectButton nextPath={next} disabled={!profile?.full_name || !profile?.niche || !profile?.city || !profile?.audience_range} />
           )}
 
-          {!profile?.niche && <p className="text-xs text-slate-500">Salve o perfil primeiro para habilitar conexao social.</p>}
+          {!profile?.full_name && <p className="text-xs text-slate-500">Salve o perfil primeiro para habilitar conexao social.</p>}
         </section>
 
         <section className="card p-5">

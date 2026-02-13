@@ -15,6 +15,8 @@ export async function saveCreatorProfileAction(formData: FormData) {
   }
 
   const next = (formData.get("next") as string) || "/dashboard";
+  const fullName = (formData.get("fullName") as string) || null;
+  const phone = (formData.get("phone") as string) || null;
   const niche = (formData.get("niche") as string) || null;
   const city = (formData.get("city") as string) || null;
   const audienceRange = (formData.get("audienceRange") as string) || null;
@@ -23,6 +25,8 @@ export async function saveCreatorProfileAction(formData: FormData) {
   await supabase.from("creator_profiles").upsert(
     {
       user_id: user.id,
+      full_name: fullName,
+      phone,
       niche,
       city,
       audience_range: audienceRange,
