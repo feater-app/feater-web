@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { sendMagicLinkAction, type LoginState } from "@/app/actions/auth";
 
 const hasSupabaseEnv = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
@@ -11,37 +11,26 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ next }: LoginFormProps) {
+  const initialState: LoginState = { message: null, error: null, retryInSeconds: 0 };
+  const [state, formAction, pending] = useActionState(sendMagicLinkAction, initialState);
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [retryInSeconds, setRetryInSeconds] = useState(0);
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    setError(null);
-    setMessage(null);
-    setLoading(true);
-
-    try {
-      if (!hasSupabaseEnv) {
-        setError("Supabase nao configurado no ambiente atual.");
-        return;
-      }
-
-      const supabase = createClient();
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
-      const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
-
-      if (error) {
-        setError("Nao foi possivel enviar o link. Verifique seu e-mail e tente novamente.");
-      } else {
-        setMessage("Link enviado! Confira sua caixa de entrada para entrar.");
-      }
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (state.retryInSeconds > 0) {
+      setRetryInSeconds(state.retryInSeconds);
     }
-  };
+  }, [state.retryInSeconds]);
 
+  useEffect(() => {
+    if (retryInSeconds <= 0) return;
+
+    const timer = setInterval(() => {
+      setRetryInSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [retryInSeconds]);
   return (
     <div className="card space-y-5 p-6">
       <div>
@@ -50,17 +39,19 @@ export default function LoginForm({ next }: LoginFormProps) {
         <p className="mt-2 text-sm text-slate-500">Use seu e-mail para receber um link magico e acessar seu dashboard.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form action={formAction} className="space-y-3">
+        <input type="hidden" name="next" value={next} />
         <input
           type="email"
+          name="email"
           className="input"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="voce@email.com"
           required
         />
-        <button type="submit" className="btn-primary w-full" disabled={loading || !hasSupabaseEnv}>
-          {loading ? "Enviando..." : "Enviar link de acesso"}
+        <button type="submit" className="btn-primary w-full" disabled={pending || !hasSupabaseEnv || retryInSeconds > 0}>
+          {pending ? "Enviando..." : retryInSeconds > 0 ? `Tente em ${retryInSeconds}s` : "Enviar link de acesso"}
         </button>
       </form>
 
@@ -70,8 +61,8 @@ export default function LoginForm({ next }: LoginFormProps) {
         </p>
       )}
 
-      {message && <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{message}</p>}
-      {error && <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+      {state.message && <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{state.message}</p>}
+      {state.error && <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{state.error}</p>}
 
       <Link href="/" className="inline-flex text-sm font-semibold text-primary underline-offset-4 hover:underline">
         Voltar para permutas
