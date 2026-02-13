@@ -147,6 +147,76 @@ export interface Database {
           notes?: string | null;
         };
       };
+      creator_profiles: {
+        Row: {
+          user_id: string;
+          created_at: string;
+          updated_at: string;
+          full_name: string | null;
+          phone: string | null;
+          niche: string | null;
+          city: string | null;
+          audience_range: string | null;
+          bio: string | null;
+          onboarding_step: number | null;
+        };
+        Insert: {
+          user_id: string;
+          created_at?: string;
+          updated_at?: string;
+          full_name?: string | null;
+          phone?: string | null;
+          niche?: string | null;
+          city?: string | null;
+          audience_range?: string | null;
+          bio?: string | null;
+          onboarding_step?: number | null;
+        };
+        Update: {
+          user_id?: string;
+          created_at?: string;
+          updated_at?: string;
+          full_name?: string | null;
+          phone?: string | null;
+          niche?: string | null;
+          city?: string | null;
+          audience_range?: string | null;
+          bio?: string | null;
+          onboarding_step?: number | null;
+        };
+      };
+      creator_social_accounts: {
+        Row: {
+          id: string;
+          created_at: string;
+          user_id: string;
+          provider: "instagram" | "tiktok";
+          provider_user_id: string | null;
+          username: string | null;
+          connected: boolean | null;
+          last_sync_at: string;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          user_id: string;
+          provider: "instagram" | "tiktok";
+          provider_user_id?: string | null;
+          username?: string | null;
+          connected?: boolean | null;
+          last_sync_at?: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          user_id?: string;
+          provider?: "instagram" | "tiktok";
+          provider_user_id?: string | null;
+          username?: string | null;
+          connected?: boolean | null;
+          last_sync_at?: string;
+        };
+      };
     };
   };
 }

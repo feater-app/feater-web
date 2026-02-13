@@ -5,7 +5,6 @@ import BrandLogo from "@/components/BrandLogo";
 import AuthNav from "@/components/AuthNav";
 import InstagramConnectButton from "@/components/InstagramConnectButton";
 import { saveCreatorProfileAction } from "@/app/actions/onboarding";
-import { getInstagramIdentity } from "@/lib/creator";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 interface OnboardingPageProps {
@@ -26,28 +25,6 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
 
   if (!user) {
     redirect(`/login?next=${encodeURIComponent(`/onboarding?next=${next}`)}`);
-  }
-
-  const identity = getInstagramIdentity(user);
-
-  if (identity) {
-    const username =
-      identity.identity_data?.preferred_username ||
-      identity.identity_data?.user_name ||
-      identity.identity_data?.username ||
-      null;
-
-    await supabase.from("creator_social_accounts").upsert(
-      {
-        user_id: user.id,
-        provider: "instagram",
-        provider_user_id: identity.id,
-        username,
-        connected: true,
-        last_sync_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,provider" }
-    );
   }
 
   const [{ data: profile }, { data: social }] = await Promise.all([
