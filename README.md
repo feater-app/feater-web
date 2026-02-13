@@ -60,9 +60,14 @@ Open `http://localhost:3000`.
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+INSTAGRAM_CLIENT_ID=your_instagram_client_id
+INSTAGRAM_CLIENT_SECRET=your_instagram_client_secret
+INSTAGRAM_REDIRECT_URI=http://localhost:3000/api/instagram/callback
+INSTAGRAM_STATE_SECRET=your_random_long_secret
 ```
 
 For production (Vercel), set `NEXT_PUBLIC_APP_URL=https://feater-web.vercel.app` so magic-link and OAuth callbacks never point to localhost.
+Also set `INSTAGRAM_REDIRECT_URI=https://feater-web.vercel.app/api/instagram/callback`.
 
 4. Execute SQL:
 
@@ -92,6 +97,10 @@ bun x tsc --noEmit
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_APP_URL` (ex: `https://feater-web.vercel.app`)
+   - `INSTAGRAM_CLIENT_ID`
+   - `INSTAGRAM_CLIENT_SECRET`
+   - `INSTAGRAM_REDIRECT_URI`
+   - `INSTAGRAM_STATE_SECRET`
 4. Build command: `bun run build` (usually auto-detected)
 
 If the repo is public, Vercel Hobby works well for low-cost demos/portfolio hosting.

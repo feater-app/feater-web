@@ -68,6 +68,8 @@ CREATE TABLE creator_profiles (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  full_name TEXT,
+  phone TEXT,
   niche TEXT,
   city TEXT,
   audience_range TEXT,

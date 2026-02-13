@@ -33,11 +33,49 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
   const { error } = await searchParams;
 
   let deal: any = null;
+  let applicant: { name: string; email: string; phone: string } | null = null;
+  let isAuthenticated = false;
+  let isInstagramConnected = false;
 
   if (isMockMode) {
     deal = getMockDeal(dealId);
   } else {
     const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    isAuthenticated = Boolean(user);
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("creator_profiles")
+        .select("full_name, phone")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const { data: social } = await supabase
+        .from("creator_social_accounts")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("provider", "instagram")
+        .eq("connected", true)
+        .maybeSingle();
+
+      isInstagramConnected = Boolean(social);
+
+      applicant = {
+        name:
+          (profile?.full_name as string | undefined) ||
+          (user.user_metadata?.full_name as string | undefined) ||
+          (user.user_metadata?.name as string | undefined) ||
+          (user.user_metadata?.display_name as string | undefined) ||
+          "",
+        email: user.email || "",
+        phone: (profile?.phone as string | undefined) || (user.phone as string | undefined) || "",
+      };
+    }
+
     const { data, error } = await supabase
       .from("deals")
       .select("*, restaurant:restaurants (id, name, category, image_url)")
@@ -92,7 +130,15 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
           </section>
         )}
 
-        <BookingForm deal={deal} isMockMode={isMockMode} />
+        <BookingForm
+          deal={deal}
+          isMockMode={isMockMode}
+          applicant={applicant}
+          isAuthenticated={isAuthenticated}
+          isInstagramConnected={isInstagramConnected}
+          loginHref={`/login?next=${encodeURIComponent(`/book/${dealId}`)}`}
+          connectInstagramHref={`/onboarding?next=${encodeURIComponent(`/book/${dealId}`)}`}
+        />
       </main>
     </div>
   );
