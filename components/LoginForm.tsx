@@ -15,6 +15,11 @@ export default function LoginForm({ next }: LoginFormProps) {
   const [state, formAction, pending] = useActionState(sendMagicLinkAction, initialState);
   const [email, setEmail] = useState("");
   const [retryInSeconds, setRetryInSeconds] = useState(0);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     if (state.retryInSeconds > 0) {
@@ -41,6 +46,7 @@ export default function LoginForm({ next }: LoginFormProps) {
 
       <form action={formAction} className="space-y-3">
         <input type="hidden" name="next" value={next} />
+        <input type="hidden" name="origin" value={origin} />
         <input
           type="email"
           name="email"
