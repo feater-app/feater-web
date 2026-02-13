@@ -59,7 +59,10 @@ Open `http://localhost:3000`.
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+For production (Vercel), set `NEXT_PUBLIC_APP_URL=https://feater-web.vercel.app` so magic-link and OAuth callbacks never point to localhost.
 
 4. Execute SQL:
 
@@ -88,6 +91,7 @@ bun x tsc --noEmit
 3. Set env vars:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_APP_URL` (ex: `https://feater-web.vercel.app`)
 4. Build command: `bun run build` (usually auto-detected)
 
 If the repo is public, Vercel Hobby works well for low-cost demos/portfolio hosting.
