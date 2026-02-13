@@ -10,6 +10,18 @@ export interface LoginState {
   retryInSeconds: number;
 }
 
+function sanitizeOrigin(value: string | null | undefined) {
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return `${url.protocol}//${url.host}`;
+  } catch {
+    return null;
+  }
+}
+
 function mapOtpError(message: string) {
   const normalized = message.toLowerCase();
 
@@ -33,28 +45,37 @@ function normalizeNextPath(value: string | null | undefined) {
   return value.startsWith("/") ? value : "/dashboard";
 }
 
-async function resolveAppOrigin() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+async function resolveAppOrigin(clientOrigin?: string | null) {
+  const safeClientOrigin = sanitizeOrigin(clientOrigin);
+  if (safeClientOrigin) return safeClientOrigin;
+
+  const appUrl = sanitizeOrigin(process.env.NEXT_PUBLIC_APP_URL);
   if (appUrl) return appUrl;
 
   const h = await headers();
-  const proto = h.get("x-forwarded-proto") || "https";
-  const host = h.get("x-forwarded-host") || h.get("host");
+  const forwardedHost = h.get("x-forwarded-host");
+  const host = forwardedHost || h.get("host");
+  const proto = h.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
 
-  if (host) return `${proto}://${host}`;
-  return "http://localhost:3000";
+  if (host) {
+    const fromHeaders = sanitizeOrigin(`${proto}://${host}`);
+    if (fromHeaders) return fromHeaders;
+  }
+
+  return "https://feater-web.vercel.app";
 }
 
 export async function sendMagicLinkAction(_: LoginState, formData: FormData): Promise<LoginState> {
   const email = String(formData.get("email") || "").trim();
   const next = normalizeNextPath(formData.get("next") as string | null);
+  const clientOrigin = formData.get("origin") as string | null;
 
   if (!email) {
     return { message: null, error: "Informe um e-mail válido.", retryInSeconds: 0 };
   }
 
   const supabase = await createClient();
-  const origin = await resolveAppOrigin();
+  const origin = await resolveAppOrigin(clientOrigin);
   const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
   const { error } = await supabase.auth.signInWithOtp({
